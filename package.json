@@ -1,0 +1,20 @@
+{
+  "name": "pmanager",
+  "version": "0.1.0",
+  "description": "A privacy data storage manager.",
+  "private": true,
+  "bin": {
+    "pm": "./bin/cli.js"
+  },
+  "scripts": {
+    "pmanager-cli": "pm"
+  },
+  "keywords": ["password", "privacy", "JSON", "cli", "web interface"],
+  "author": "RyanXin",
+  "license": "ISC",
+  "devDependencies": {
+    "pmanager": "file:",
+    "webpack": "^5.65.0",
+    "webpack-cli": "^4.9.1"
+  }
+}
