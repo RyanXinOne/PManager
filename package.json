@@ -7,11 +7,14 @@
     "pm": "./bin/cli.js"
   },
   "scripts": {
-    "pmanager-cli": "pm"
+    "cli-test": "node ./bin/test.js"
   },
   "keywords": ["password", "privacy", "JSON", "cli", "web interface"],
   "author": "RyanXin",
   "license": "ISC",
+  "dependencies": {
+    "minimist": "^1.2.5"
+  },
   "devDependencies": {
     "pmanager": "file:",
     "webpack": "^5.65.0",
