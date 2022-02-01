@@ -15,6 +15,8 @@ function readData() {
     try {
         data = fs.readFileSync(config.fileStore, 'utf8');
         data = JSON.parse(data);
+        // check structure
+        // pass
     } catch (err) {
         return response(false, err.message);
     }
@@ -76,7 +78,7 @@ function _getDoc(keyChain, document) {
  * @param {string} value value to be set
  * @param {boolean} insert insert new document into index instead of editing existing one. If true, flag `create` would be treated as true anyway
  * @param {boolean} create create new object and key-value pair if any of them in key chain does not exist
- * @param {boolean} force force to overwrite if any key in key chain points to an existing object
+ * @param {boolean} force force to overwrite even if any key in key chain points to an existing object
  */
 function _set(scope, index, keyChain, value, insert = false, create = false, force = false) {
     if (insert) create = true;
@@ -134,13 +136,13 @@ function _setDoc(keyChain, value, document, create, force) {
         // iterate into next key
         obj = obj[keyChain[i]];
     }
-    // check object
-    if (typeof obj[keyChain[i]] === 'object' && !force) {
-        return response(false, `Not allowed to overwrite object on "${keyChain.join('.')}".`);
-    }
     // check existence of final key-value pair and update
     if (obj.hasOwnProperty(keyChain[i])) {
         if (!create) {
+            // check if final key points to an object
+            if (typeof obj[keyChain[i]] === 'object' && !force) {
+                return response(false, `Not allowed to overwrite object on "${keyChain.join('.')}".`);
+            }
             obj[keyChain[i]] = value;
         } else {
             return response(false, `Key "${keyChain.join('.')}" already exists.`);
@@ -161,7 +163,7 @@ function _setDoc(keyChain, value, document, create, force) {
  * @param {string} scope scope name
  * @param {Integer} index index of document to be deleted from the scope
  * @param {Array.<string>} keyChain key chain of document, empty array means deleting the whole document given that `force` mode is enabled
- * @param {boolean} force force to delete if deleting target is an object
+ * @param {boolean} force force to delete even if the deleting target is an object
  */
 function _delete(scope, index, keyChain, force = false) {
     let data = readData();
@@ -219,6 +221,11 @@ function _deleteDoc(keyChain, document, force) {
 
 /**
  * Move a document from one position to another. Target scope would be created if it does not exist. Source document would be deleted first and then be inserted into target index under target scope. Empty scope would be deleted automatically.
+ * 
+ * @param {string} scope1 source scope name
+ * @param {Integer} index1 source index
+ * @param {string} scope2 target scope name
+ * @param {Integer} index2 target index
  */
 function _move(scope1, index1, scope2, index2) {
     let data = readData();
