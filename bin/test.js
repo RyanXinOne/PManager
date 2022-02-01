@@ -13,4 +13,4 @@ function execute(cmd) {
     });
 }
 
-execute('npx pm -d 2 -n 0 2-3');
+execute('npx pm -c 1 -n 0 1-4 vv1-1');

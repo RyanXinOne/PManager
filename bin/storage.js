@@ -68,16 +68,19 @@ function _getDoc(keyChain, document) {
 }
 
 /**
- * Create scope/document or insert/update key-value pair in document by key chain specified.
+ * Modify existing key-value pair in document by key chain and value specified.
  * 
  * @param {string} scope scope name
  * @param {Integer} index index of document to be updated under the scope, a new document would be created if out of range
  * @param {Array.<string>} keyChain key chain of document
  * @param {string} value value to be set
- * @param {boolean} create create new object if any non-final key in key chain does not exist
+ * @param {boolean} insert insert new document into index instead of editing existing one. If true, flag `create` would be treated as true anyway
+ * @param {boolean} create create new object and key-value pair if any of them in key chain does not exist
  * @param {boolean} force force to overwrite if any key in key chain points to an existing object
  */
-function _set(scope, index, keyChain, value, create = false, force = false) {
+function _set(scope, index, keyChain, value, insert = false, create = false, force = false) {
+    if (insert) create = true;
+
     let data = readData();
     if (data.success) {
         data = data.data;
@@ -100,6 +103,11 @@ function _set(scope, index, keyChain, value, create = false, force = false) {
             index = document.push({}) - 1;
         } else {
             return response(false, `Index ${index} under scope "${scope}" does not exist.`);
+        }
+    } else {
+        if (insert) {
+            // insert new document
+            document.splice(index, 0, {});
         }
     }
     document = document[index];
@@ -130,8 +138,20 @@ function _setDoc(keyChain, value, document, create, force) {
     if (typeof obj[keyChain[i]] === 'object' && !force) {
         return response(false, `Not allowed to overwrite object on "${keyChain.join('.')}".`);
     }
-    // update value to the final key
-    obj[keyChain[i]] = value;
+    // check existence of final key-value pair and update
+    if (obj.hasOwnProperty(keyChain[i])) {
+        if (!create) {
+            obj[keyChain[i]] = value;
+        } else {
+            return response(false, `Key "${keyChain.join('.')}" already exists.`);
+        }
+    } else {
+        if (create) {
+            obj[keyChain[i]] = value;
+        } else {
+            return response(false, `Key "${keyChain.join('.')}" does not exist.`);
+        }
+    }
     return response(true);
 }
 

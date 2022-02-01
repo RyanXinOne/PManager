@@ -12,8 +12,8 @@ function print(obj) {
 
 const argOpts = {
     string: '_',
-    boolean: ['h', 'e', 'c', 'd', 'f', 'no-parse-flag'],
-    alias: { 'h': 'help', 'e': ['m', 'edit'], 'c': 'create', 'd': 'delete', 'f': 'force', 'n': 'index' },
+    boolean: ['h', 'e', 'i', 'c', 'd', 'f', 'no-parse-flag'],
+    alias: { 'h': 'help', 'e': 'edit', 'i': 'insert', 'c': 'create', 'd': 'delete', 'f': 'force', 'n': 'index' },
     default: { 'n': 0 },
     stopEarly: false
 };
@@ -38,9 +38,9 @@ if (args.help) {
         pm <key> --delete
         pm --help
     `);
-} else if (args.edit) {
+} else if (args.edit || args.insert || args.create) {
     // set
-    let res = storage.set(scope, args.index, args._.slice(1, args._.length - 1), args._[args._.length - 1], args.create, args.force);
+    let res = storage.set(scope, args.index, args._.slice(1, args._.length - 1), args._[args._.length - 1], args.insert, args.create, args.force);
     if (!res.success) {
         print(res.message);
     }
