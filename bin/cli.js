@@ -12,8 +12,8 @@ function print(obj) {
 
 const argOpts = {
     string: '_',
-    boolean: ['h', 'e', 'i', 'c', 'd', 'f', 'no-parse-flag'],
-    alias: { 'h': 'help', 'e': 'edit', 'i': 'insert', 'c': 'create', 'd': 'delete', 'f': 'force', 'n': 'index' },
+    boolean: ['h', 'e', 'i', 'c', 'd', 'f', 'm', 'no-parse-flag'],
+    alias: { 'h': 'help', 'e': 'edit', 'i': 'insert', 'c': 'create', 'd': 'delete', 'n': 'index', 'f': 'force', 'm': 'move' },
     default: { 'n': 0 },
     stopEarly: false
 };
@@ -47,6 +47,26 @@ if (args.help) {
 } else if (args.delete) {
     // delete
     let res = storage.delete(scope, args.index, args._.slice(1), args.force);
+    if (!res.success) {
+        print(res.message);
+    }
+} else if (args.move) {
+    // move
+    let scope1 = scope;
+    let index1 = parseInt(args._[1]);
+    let scope2, index2;
+    if (args._.length === 3) {
+        scope2 = scope1;
+        index2 = parseInt(args._[2]);
+    } else {
+        scope2 = args._[2];
+        index2 = parseInt(args._[3]);
+    }
+    if (isNaN(index1) || !scope2 || isNaN(index2)) {
+        print('Invalid arguments.');
+        process.exit(0);
+    }
+    let res = storage.move(scope1, index1, scope2, index2);
     if (!res.success) {
         print(res.message);
     }

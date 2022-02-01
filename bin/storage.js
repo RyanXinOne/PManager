@@ -156,7 +156,7 @@ function _setDoc(keyChain, value, document, create, force) {
 }
 
 /**
- * Delete document or key-value pair in document by key chain specified. Scope would be automatically deleted if there is no document in it.
+ * Delete document or key-value pair in document by key chain specified. Scope would be deleted automatically if there is no document in it.
  * 
  * @param {string} scope scope name
  * @param {Integer} index index of document to be deleted from the scope
@@ -217,6 +217,42 @@ function _deleteDoc(keyChain, document, force) {
     return response(true);
 }
 
+/**
+ * Move a document from one position to another. Target scope would be created if it does not exist. Source document would be deleted first and then be inserted into target index under target scope. Empty scope would be deleted automatically.
+ */
+function _move(scope1, index1, scope2, index2) {
+    let data = readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    let document = data;
+    // check existence of source scope and index
+    if (!document[scope1] || !document[scope1][index1]) {
+        return response(false, `Source scope "${scope1}" or index ${index1} does not exist.`);
+    }
+    document = document[scope1][index1];
+    // delete source document
+    data[scope1].splice(index1, 1);
+    // insert into target position
+    if (!data[scope2]) {
+        data[scope2] = [];
+    }
+    if (!data[scope2][index2]) {
+        data[scope2].push(document);
+    } else {
+        data[scope2].splice(index2, 0, document);
+    }
+    // clean empty source scope
+    if (data[scope1].length === 0) {
+        delete data[scope1];
+    }
+
+    return writeData(data);
+}
+
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
+exports.move = _move;
