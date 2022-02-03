@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Your one-stop privacy manager.",
   "private": true,
   "bin": {

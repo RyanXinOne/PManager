@@ -13,4 +13,4 @@ function execute(cmd) {
     });
 }
 
-execute('npx pm --help');
+execute('npx pm --version');

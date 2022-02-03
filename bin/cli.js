@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 const storage = require('./storage.js');
 const parseArgs = require('minimist');
+const fs = require('fs');
+
 
 function print(obj) {
     if (typeof obj === 'object') {
@@ -12,8 +14,8 @@ function print(obj) {
 
 const argOpts = {
     string: '_',
-    boolean: ['h', 'e', 'i', 'c', 'd', 'f', 'm', 'no-parse-flag', 'import', 'export'],
-    alias: { 'h': 'help', 'e': 'edit', 'i': 'insert', 'c': 'create', 'd': 'delete', 'n': 'index', 'f': 'force', 'm': 'move' },
+    boolean: ['h', 'v', 'e', 'i', 'c', 'd', 'f', 'm', 'no-parse-flag', 'import', 'export'],
+    alias: { 'h': 'help', 'v': 'version', 'e': 'edit', 'i': 'insert', 'c': 'create', 'd': 'delete', 'n': 'index', 'f': 'force', 'm': 'move' },
     default: { 'n': 0 },
     stopEarly: false
 };
@@ -33,7 +35,7 @@ Usage:
     pm -e[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm -m [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
-    pm --help
+    pm --help|--version
 
 Options:
     -n <index>                 Index of document to be updated under the <scope>, a new document would be created if value is out of range. Default: 0
@@ -44,13 +46,18 @@ Options:
     -d, --delete               Delete a document or key-value pair by <key chain> specified. Empty scope would be cleaned automatically.
     -f, --force                Under editing mode, force to overwrite even if any key in <key chain> points to an existing object. Under deleting mode, force to delete even if the deleting target is an object.
     -m, --move                 Move a document from one position to another. <Target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
-    -h, --help                 Print this help message.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
     --import                   Import data from an external file.
     --export                   Export data to an external file.
+    -h, --help                 Print this help message.
+    -v, --version              Print version number.
 
 If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.`
     );
+} else if (args.version) {
+    // version number
+    let package = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
+    print(package.version);
 } else if (args.import || args.export) {
     // import/export data
     let filePath = args._[0];

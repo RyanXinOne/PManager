@@ -1,5 +1,5 @@
 const config = {
-    fileStoragePath: './dataStorage.json'
+    fileStoragePath: `${__dirname}/../dataStorage.json`
 };
 
 module.exports = config;
