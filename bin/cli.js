@@ -29,9 +29,9 @@ if (args.help) {
     print(`Your one-stop privacy manager.
 
 Usage:
-    pm <scope> [-n <index>] [<key chain>...]
-    pm -e[f]|-i|-c|-d[f] <scope> [-n <index>] [<key chain>...] [<value>]
-    pm -m <source scope> <source index> <target scope> <target index>
+    pm [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
+    pm -e[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
+    pm -m [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
     pm --help
 
@@ -49,8 +49,7 @@ Options:
     --import                   Import data from an external file.
     --export                   Export data to an external file.
 
-If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.
-`
+If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.`
     );
 } else if (args.import || args.export) {
     // import/export data
