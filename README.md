@@ -1,2 +1,2 @@
 # PManager
-A JSON based privacy data storage manager.
+Your one-stop privacy manager.

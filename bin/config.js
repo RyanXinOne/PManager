@@ -1,5 +1,5 @@
 const config = {
-    fileStore: './sampleFileStore.json'
+    fileStoragePath: './dataStorage.json'
 };
 
 module.exports = config;

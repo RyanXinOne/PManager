@@ -10,22 +10,26 @@ function response(success, message = null, data = null) {
     };
 }
 
-function readData() {
+function readData(filePath = undefined) {
+    if (filePath === undefined) {
+        filePath = config.fileStoragePath;
+    }
     let data;
     try {
-        data = fs.readFileSync(config.fileStore, 'utf8');
+        data = fs.readFileSync(filePath, 'utf8');
         data = JSON.parse(data);
-        // check structure
-        // pass
     } catch (err) {
         return response(false, err.message);
     }
     return response(true, null, data);
 }
 
-function writeData(data) {
+function writeData(data, filePath = undefined) {
+    if (filePath === undefined) {
+        filePath = config.fileStoragePath;
+    }
     try {
-        fs.writeFileSync(config.fileStore, JSON.stringify(data, null, 4));
+        fs.writeFileSync(filePath, JSON.stringify(data, null, 4));
     } catch (err) {
         return response(false, err.message);
     }
@@ -259,7 +263,60 @@ function _move(scope1, index1, scope2, index2) {
     return writeData(data);
 }
 
+function _import(filePath) {
+    let data = readData(filePath);
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    // check json structure
+    if (Object.prototype.toString.call(data) !== Object.prototype.toString.call({})) {
+        return response(false, 'Non-compliant file input.');
+    }
+    // a helper function
+    let consistsOfObjectsOnly = (obj) => {
+        let queue = [obj];
+        while (queue.length > 0) {
+            let obj = queue.shift();
+            if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({})) {
+                return false;
+            }
+            for (let key in obj) {
+                if (typeof obj[key] !== 'string') {
+                    queue.push(obj[key]);
+                }
+            }
+        }
+        return true;
+    };
+    for (let scope in data) {
+        let documents = data[scope];
+        if (!Array.isArray(documents)) {
+            return response(false, 'Non-compliant file input.');
+        }
+        for (let i = 0; i < documents.length; i++) {
+            if (!consistsOfObjectsOnly(documents[i])) {
+                return response(false, 'Non-compliant file input.');
+            }
+        }
+    }
+    return writeData(data);
+}
+
+function _export(filePath) {
+    let data = readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    return writeData(data, filePath);
+}
+
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
 exports.move = _move;
+exports.import = _import;
+exports.export = _export;

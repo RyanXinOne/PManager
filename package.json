@@ -7,7 +7,7 @@
     "pm": "./bin/cli.js"
   },
   "scripts": {
-    "cli-test": "node ./bin/test.js"
+    "cli-test": "node ./cli-test.js"
   },
   "keywords": ["privacy", "password", "cli", "web interface", "JSON", "MongoDB"],
   "author": "RyanXin",
