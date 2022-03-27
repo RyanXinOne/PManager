@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.1.2",
+  "version": "0.1.3.dev0",
   "description": "Your one-stop privacy manager.",
   "private": true,
   "bin": {
@@ -9,7 +9,7 @@
   "scripts": {
     "cli-test": "node ./cli-test.js"
   },
-  "keywords": ["privacy", "password", "cli", "web interface", "JSON", "MongoDB"],
+  "keywords": ["privacy", "password", "JSON", "cli", "web interface"],
   "author": "RyanXin",
   "license": "ISC",
   "dependencies": {

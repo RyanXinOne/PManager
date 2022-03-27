@@ -1,10 +1,10 @@
 {
-    "scopeName": [
+    "scopeSample": [
         {
             "name": "document1",
             "description": "This is a sample document.",
             "nestedObj": {
-                "subkey": "fetch me by key chain `scopeName nestedObj subkey`"
+                "subkey": "fetch me by key chain `scopeSample nestedObj subkey`"
             }
         }
     ]
