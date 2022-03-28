@@ -31,8 +31,8 @@ if (args.help) {
     print(`Your one-stop privacy manager.
 
 Usage:
-    pm [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
-    pm -e[f]|-m[f]|-i|-c|-d[f] [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
+    pm [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
+    pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
     pm --help|--version
