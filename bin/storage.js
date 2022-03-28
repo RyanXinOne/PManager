@@ -43,7 +43,7 @@ function writeData(data, filePath = undefined) {
  * @param {Integer} index index of document to be fetched under the scope
  * @param {Array.<string>} keyChain key chain of document
  */
-function _get(scope, index, keyChain) {
+function _get(scope, index, keyChain, noFuzzy = false) {
     let data = readData();
     if (data.success) {
         data = data.data;
@@ -51,12 +51,45 @@ function _get(scope, index, keyChain) {
         return data;
     }
     let document = data;
-    // check existence of scope and index
-    if (!document[scope] || !document[scope][index]) {
-        return response(false, `Scope "${scope}" or index ${index} does not exist.`);
+    // query scope
+    let scopes = _getScope(scope, document, noFuzzy);
+    switch (scopes.length) {
+        case 0:
+            return response(false, `Scope "${scope}" does not exist.`);
+        case 1:
+            document = document[scopes[0]];
+            break;
+        default:
+            return response(true, `Multiple scopes found. Please specify which one you want, or add "--no-fuzzy" for exact match.`, scopes);
     }
-    document = document[scope][index];
-    return _getDoc(keyChain, document);
+    // check existence of index
+    if (!document[index]) {
+        return response(false, `Scope "${scope}" does not have index ${index}.`);
+    }
+    document = document[index];
+    let res = _getDoc(keyChain, document);
+    return res.success ? response(true, `Scope: ${scopes[0]}`, res.data) : res;
+}
+
+/**
+ * Fuzzy query scope(s) from document.
+ */
+function _getScope(scope, document, noFuzzy = false) {
+    let res = [];
+    if (noFuzzy) {
+        if (scope in document) {
+            res.push(scope);
+        }
+    } else {
+        scope = scope.toLowerCase();
+        for (let key in document) {
+            let fkey = key.toLowerCase();
+            if (fkey.indexOf(scope) > -1) {
+                res.push(key);
+            }
+        }
+    }
+    return res;
 }
 
 function _getDoc(keyChain, document) {
