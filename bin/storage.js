@@ -42,6 +42,7 @@ function writeData(data, filePath = undefined) {
  * @param {string} scope scope name
  * @param {Integer} index index of document to be fetched under the scope
  * @param {Array.<string>} keyChain key chain of document
+ * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
 function _get(scope, index, keyChain, noFuzzy = false) {
     let data = readData();
@@ -63,12 +64,12 @@ function _get(scope, index, keyChain, noFuzzy = false) {
             return response(true, `Multiple scopes found. Please specify which one you want, or add "--no-fuzzy" for exact match.`, scopes);
     }
     // check existence of index
-    if (!document[index]) {
+    if (document[index] === undefined) {
         return response(false, `Scope "${scope}" does not have index ${index}.`);
     }
     document = document[index];
     let res = _getDoc(keyChain, document);
-    return res.success ? response(true, `Scope: ${scopes[0]}`, res.data) : res;
+    return res.success ? response(true, `Scope: "${scopes[0]}"`, res.data) : res;
 }
 
 /**
@@ -98,7 +99,7 @@ function _getDoc(keyChain, document) {
         // iterate into next key
         obj = obj[keyChain[i]];
         // check undefined
-        if (!obj) {
+        if (obj === undefined) {
             return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
         }
     }
@@ -128,7 +129,7 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
     }
     let document = data;
     // check existence of scope
-    if (!document[scope]) {
+    if (document[scope] === undefined) {
         if (create) {
             document[scope] = [];
         } else {
@@ -137,7 +138,7 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
     }
     document = document[scope];
     // check existence of index
-    if (!document[index]) {
+    if (document[index] === undefined) {
         if (create) {
             index = document.push({}) - 1;
         } else {
@@ -163,7 +164,7 @@ function _setDoc(keyChain, value, document, create, force) {
     let i;
     for (i = 0; i < keyChain.length - 1; i++) {
         // check existence of key
-        if (!obj[keyChain[i]]) {
+        if (obj[keyChain[i]] === undefined) {
             if (create) {
                 obj[keyChain[i]] = {};
             } else {
@@ -211,7 +212,7 @@ function _delete(scope, index, keyChain, force = false) {
     }
     let document = data;
     // check existence of scope and index
-    if (!document[scope] || !document[scope][index]) {
+    if (document[scope] === undefined || document[scope][index] === undefined) {
         return response(false, `Scope "${scope}" or index ${index} does not exist.`);
     }
     document = document[scope];
@@ -239,7 +240,7 @@ function _deleteDoc(keyChain, document, force) {
         // iterate into next key
         obj = obj[keyChain[i]];
         // check existence
-        if (!obj) {
+        if (obj === undefined) {
             return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
         }
     }
@@ -273,17 +274,17 @@ function _move(scope1, index1, scope2, index2) {
     }
     let document = data;
     // check existence of source scope and index
-    if (!document[scope1] || !document[scope1][index1]) {
+    if (document[scope1] === undefined || document[scope1][index1] === undefined) {
         return response(false, `Source scope "${scope1}" or index ${index1} does not exist.`);
     }
     document = document[scope1][index1];
     // delete source document
     data[scope1].splice(index1, 1);
     // insert into target position
-    if (!data[scope2]) {
+    if (data[scope2] === undefined) {
         data[scope2] = [];
     }
-    if (!data[scope2][index2]) {
+    if (data[scope2][index2] === undefined) {
         data[scope2].push(document);
     } else {
         data[scope2].splice(index2, 0, document);

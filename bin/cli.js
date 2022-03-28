@@ -53,7 +53,7 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. <scope> allows fuzzy querying by default. One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.`
+If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. <scope> allows fuzzy querying by default (use empty scope "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.`
     );
 } else if (args.version) {
     // version number
@@ -62,8 +62,8 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
 } else if (args.import || args.export) {
     // import/export data
     let filePath = args._[0];
-    if (!filePath) {
-        print('File path cannot be empty.\nUse --help for more information.');
+    if (filePath === undefined) {
+        print('File path cannot be missing.\nUse --help for more information.');
         process.exit(0);
     }
     let res;
@@ -78,8 +78,8 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
 } else {
     // pre-extraction
     let scope = args._[0];
-    if (!scope) {
-        print('Scope name cannot be empty.\nUse --help for more information.');
+    if (scope === undefined) {
+        print('Scope name cannot be missing.\nUse --help for more information.');
         process.exit(0);
     }
     let index = parseInt(args.index);
@@ -112,7 +112,7 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
             scope2 = args._[2];
             index2 = parseInt(args._[3]);
         }
-        if (!scope2 || isNaN(index2)) {
+        if (scope2 === undefined || isNaN(index2)) {
             print('Invalid arguments.\nUse --help for more information.');
             process.exit(0);
         }
