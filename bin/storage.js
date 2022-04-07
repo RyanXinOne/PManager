@@ -40,7 +40,7 @@ function writeData(data, filePath = undefined) {
  * Fetch from document by key chain specified.
  * 
  * @param {string} scope scope name
- * @param {Integer} index index of document to be fetched under the scope
+ * @param {Integer|"all"} index index of document to be fetched under the scope, string value "all" returns all documents under the scope
  * @param {Array.<string>} keyChain key chain of document
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
@@ -63,13 +63,31 @@ function _get(scope, index, keyChain, noFuzzy = false) {
         default:
             return response(true, `Multiple scopes found. Please specify which one you want, or add "--no-fuzzy" for exact match.`, scopes);
     }
-    // check existence of index
-    if (document[index] === undefined) {
-        return response(false, `Scope "${scope}" does not have index ${index}.`);
+    if (index === 'all') {
+        let objs = [];
+        for (let doc of document) {
+            let res = _getDoc(keyChain, doc);
+            if (res.success) {
+                objs.push(res.data);
+            }
+        }
+        switch (objs.length) {
+            case 0:
+                return response(false, `No compliant objects found under scope "${scopes[0]}".`);
+            case 1:
+                return response(true, `Scope: "${scopes[0]}"`, objs[0]);
+            default:
+                return response(true, `Scope: "${scopes[0]}", ${objs.length} objects found`, objs);
+        }
+    } else {
+        // check existence of index
+        if (document[index] === undefined) {
+            return response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
+        }
+        document = document[index];
+        let res = _getDoc(keyChain, document);
+        return res.success ? response(true, `Scope: "${scopes[0]}"`, res.data) : res;
     }
-    document = document[index];
-    let res = _getDoc(keyChain, document);
-    return res.success ? response(true, `Scope: "${scopes[0]}"`, res.data) : res;
 }
 
 /**

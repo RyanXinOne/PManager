@@ -3,15 +3,6 @@ const storage = require('./storage.js');
 const parseArgs = require('minimist');
 const fs = require('fs');
 
-
-function print(obj) {
-    if (typeof obj === 'object') {
-        console.log(JSON.stringify(obj, null, 2));
-    } else {
-        console.log(obj);
-    }
-}
-
 const argOpts = {
     string: '_',
     boolean: ['help', 'version', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export'],
@@ -38,7 +29,7 @@ Usage:
     pm --help|--version
 
 Options:
-    -n <index>                 Index of document to be updated under the <scope>, a new document would be created if value is out of range. Default: 0
+    -n <index>                 Index of document under the <scope>. When fetch, string value "all" is allowed to fetch all. When create, a new document would be created if index is out of range. Default: 0
     --index=<index>            Same as -n <index>.
     -e, -m, --edit             Modify existing key-value pair in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
@@ -82,26 +73,25 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
         print('Scope name cannot be missing.\nUse --help for more information.');
         process.exit(0);
     }
-    let index = parseInt(args.index);
-    if (isNaN(index)) {
-        print('Index must be a number.\nUse --help for more information.');
-        process.exit(0);
-    }
+    let index;
 
     if (args.edit || args.insert || args.create) {
         // set
+        index = parseIndex(args.index);
         let res = storage.set(scope, index, args._.slice(1, args._.length - 1), args._[args._.length - 1], args.insert, args.create, args.force);
         if (!res.success) {
             print(res.message);
         }
     } else if (args.delete) {
         // delete
+        index = parseIndex(args.index);
         let res = storage.delete(scope, index, args._.slice(1), args.force);
         if (!res.success) {
             print(res.message);
         }
     } else if (args.move) {
         // move
+        index = parseIndex(args.index);
         let scope1 = scope;
         let index1 = index;
         let scope2, index2;
@@ -121,7 +111,12 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
             print(res.message);
         }
     } else {
-        // get
+        // fetch
+        if (args.index === 'all') {
+            index = args.index;
+        } else {
+            index = parseIndex(args.index);
+        }
         let res = storage.get(scope, index, args._.slice(1), !args['fuzzy']);
         if (res.success) {
             print(res.message);
@@ -130,4 +125,21 @@ If no flag is specified, pm would fetch value by specified <key chain> in the fi
             print(res.message);
         }
     }
+}
+
+function print(obj) {
+    if (typeof obj === 'object') {
+        console.log(JSON.stringify(obj, null, 2));
+    } else {
+        console.log(obj);
+    }
+}
+
+function parseIndex(indexIn) {
+    let index = parseInt(indexIn);
+    if (isNaN(index)) {
+        print('Index must be a number.\nUse --help for more information.');
+        process.exit(0);
+    }
+    return index;
 }
