@@ -1,4 +1,5 @@
 const config = require('./config.js');
+const path = require('path');
 const fs = require('fs');
 
 
@@ -379,6 +380,7 @@ const iniData = {
     ]
 }
 if (!fs.existsSync(config.fileStoragePath)) {
+    fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
     fs.writeFileSync(config.fileStoragePath, JSON.stringify(iniData, null, 4));
 }
 

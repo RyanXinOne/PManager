@@ -10,7 +10,7 @@
     "pm": "./bin/cli.js"
   },
   "scripts": {
-    "cli-test": "node ./cli-test.js"
+    "cli-test": "set PMENV=dev&& node ./cli-test.js"
   },
   "dependencies": {
     "minimist": "^1.2.0"
