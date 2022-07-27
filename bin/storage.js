@@ -366,6 +366,22 @@ function _export(filePath) {
     return writeData(data, filePath);
 }
 
+// initialise data storage if non-existent
+const iniData = {
+    "scopeSample": [
+        {
+            "name": "document1",
+            "description": "This is a sample document.",
+            "nestedObj": {
+                "subkey": "fetch me by key chain `scopeSample nestedObj subkey`"
+            }
+        }
+    ]
+}
+if (!fs.existsSync(config.fileStoragePath)) {
+    fs.writeFileSync(config.fileStoragePath, JSON.stringify(iniData, null, 4));
+}
+
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
