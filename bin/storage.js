@@ -37,7 +37,7 @@ function writeData(data, filePath = undefined) {
 }
 
 /**
- * Fetch from document by key chain specified.
+ * Fetch document or object by scope, index, and key chain specified.
  * 
  * @param {string} scope scope name
  * @param {Integer|"all"} index index of document to be fetched under the scope, string value "all" returns all documents under the scope
@@ -53,7 +53,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
     }
     let document = data;
     // query scope
-    let scopes = _getScope(scope, document, noFuzzy);
+    let scopes = _queryDataStore(scope, document, noFuzzy);
     switch (scopes.length) {
         case 0:
             return response(false, `Scope "${scope}" does not exist.`);
@@ -66,7 +66,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
     if (index === 'all') {
         let objs = [];
         for (let doc of document) {
-            let res = _getDoc(keyChain, doc);
+            let res = _queryDoc(keyChain, doc);
             if (res.success) {
                 objs.push(res.data);
             }
@@ -85,55 +85,55 @@ function _get(scope, index, keyChain, noFuzzy = false) {
             return response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
         }
         document = document[index];
-        let res = _getDoc(keyChain, document);
+        let res = _queryDoc(keyChain, document);
         return res.success ? response(true, `Scope: "${scopes[0]}"`, res.data) : res;
     }
 }
 
 /**
- * Fuzzy query scope(s) from document.
+ * Fuzzy query scope(s) from dataStore.
  */
-function _getScope(scope, document, noFuzzy = false) {
+function _queryDataStore(targetScope, dataStore, noFuzzy = false) {
     let res = [];
     if (noFuzzy) {
-        if (scope in document) {
-            res.push(scope);
+        if (targetScope in dataStore) {
+            res.push(targetScope);
         }
     } else {
-        scope = scope.toLowerCase();
-        for (let key in document) {
-            let fkey = key.toLowerCase();
-            if (fkey.indexOf(scope) > -1) {
-                res.push(key);
+        targetScope = targetScope.toLowerCase();
+        for (let scope in dataStore) {
+            let lowerScope = scope.toLowerCase();
+            if (lowerScope.indexOf(targetScope) > -1) {
+                res.push(scope);
             }
         }
     }
     return res;
 }
 
-function _getDoc(keyChain, document) {
+function _queryDoc(keyChain, document) {
     let obj = document;
     for (let i = 0; i < keyChain.length; i++) {
-        // iterate into next key
+        // iterate into nested object
         obj = obj[keyChain[i]];
         // check undefined
         if (obj === undefined) {
             return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
         }
     }
-    // get value from the final key
+    // get value by sentence key
     return response(true, null, obj);
 }
 
 /**
- * Modify existing key-value pair in document by key chain and value specified.
+ * Modify existing sentence in document by key chain and value specified.
  * 
  * @param {string} scope scope name
  * @param {Integer} index index of document to be updated under the scope, a new document would be created if out of range
  * @param {Array.<string>} keyChain key chain of document
  * @param {string} value value to be set
  * @param {boolean} insert insert new document into index instead of editing existing one. If true, flag `create` would be treated as true anyway
- * @param {boolean} create create new object and key-value pair if any of them in key chain does not exist
+ * @param {boolean} create create new object and sentence if any of them in key chain does not exist
  * @param {boolean} force force to overwrite even if any key in key chain points to an existing object
  */
 function _set(scope, index, keyChain, value, insert = false, create = false, force = false) {
@@ -160,7 +160,7 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
         if (create) {
             index = document.push({}) - 1;
         } else {
-            return response(false, `Index ${index} under scope "${scope}" does not exist.`);
+            return response(false, `Scope "${scope}" does not have index ${index}.`);
         }
     } else {
         if (insert) {
@@ -169,14 +169,14 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
         }
     }
     document = document[index];
-    let res = _setDoc(keyChain, value, document, create, force);
+    let res = _updateDoc(keyChain, value, document, create, force);
     return res.success ? writeData(data) : res;
 }
 
-function _setDoc(keyChain, value, document, create, force) {
+function _updateDoc(keyChain, value, document, create, force) {
     // check key chain
     if (keyChain.length === 0) {
-        return response(false, 'Key chain cannot be empty.');
+        return response(false, 'Key chain cannot be missing.');
     }
     let obj = document;
     let i;
@@ -189,15 +189,15 @@ function _setDoc(keyChain, value, document, create, force) {
                 return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
             }
         }
-        // iterate into next key
+        // iterate into nested object
         obj = obj[keyChain[i]];
     }
-    // check existence of final key-value pair and update
+    // check existence of sentence and update
     if (obj.hasOwnProperty(keyChain[i])) {
         if (!create) {
-            // check if final key points to an object
+            // check if the last key points to an object
             if (typeof obj[keyChain[i]] === 'object' && !force) {
-                return response(false, `Not allowed to overwrite object on "${keyChain.join('.')}".`);
+                return response(false, `Not allowed to overwrite object under "${keyChain.join('.')}".`);
             }
             obj[keyChain[i]] = value;
         } else {
@@ -214,7 +214,7 @@ function _setDoc(keyChain, value, document, create, force) {
 }
 
 /**
- * Delete document or key-value pair in document by key chain specified. Scope would be deleted automatically if there is no document in it.
+ * Delete document or sentence by key chain specified. Scope would be deleted automatically if there is no document in it.
  * 
  * @param {string} scope scope name
  * @param {Integer} index index of document to be deleted from the scope
@@ -243,7 +243,7 @@ function _delete(scope, index, keyChain, force = false) {
             }
             return writeData(data);
         } else {
-            return response(false, `Not allowed to delete document object with index ${index} under scope "${scope}".`);
+            return response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
         }
     }
     document = document[index];
@@ -255,7 +255,7 @@ function _deleteDoc(keyChain, document, force) {
     let obj = document;
     let i;
     for (i = 0; i < keyChain.length - 1; i++) {
-        // iterate into next key
+        // iterate into nested object
         obj = obj[keyChain[i]];
         // check existence
         if (obj === undefined) {
@@ -268,9 +268,9 @@ function _deleteDoc(keyChain, document, force) {
     }
     // check object
     if (typeof obj[keyChain[i]] === 'object' && !force) {
-        return response(false, `Not allowed to delete object on "${keyChain.join('.')}".`);
+        return response(false, `Not allowed to delete object under "${keyChain.join('.')}".`);
     }
-    // delete value from the final key
+    // delete sentence by sentence key
     delete obj[keyChain[i]];
     return response(true);
 }
@@ -368,12 +368,12 @@ function _export(filePath) {
 
 // initialise data storage if non-existent
 const iniData = {
-    "scopeSample": [
+    "scope0": [
         {
             "name": "document1",
             "description": "This is a sample document.",
-            "nestedObj": {
-                "subkey": "fetch me by key chain `scopeSample nestedObj subkey`"
+            "object2": {
+                "sentenceKey": "fetch me by key chain `scope0 object2 sentenceKey`"
             }
         }
     ]

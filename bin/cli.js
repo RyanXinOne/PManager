@@ -31,10 +31,10 @@ Usage:
 Options:
     -n <index>                 Index of document under the <scope>. When fetch, string value "all" is allowed to fetch all. When create, a new document would be created if index is out of range. Default: 0
     --index=<index>            Same as -n <index>.
-    -e, -m, --edit             Modify existing key-value pair in a document by specified <key chain> and <value>.
+    -e, -m, --edit             Modify existing sentence in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
-    -c, --create               Create new object and key-value pair if any of them in <key chain> does not exist.
-    -d, --delete               Delete a document or key-value pair by <key chain> specified. Empty scope would be cleaned automatically.
+    -c, --create               Create new object and sentence if any key in <key chain> does not exist.
+    -d, --delete               Delete a document or sentence by <key chain> specified. Empty scope would be cleaned automatically.
     -f, --force                Under editing mode, force to overwrite even if any key in <key chain> points to an existing object. Under deleting mode, force to delete even if the deleting target is an object.
     --move                     Move a document from one position to another. <Target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
     --no-fuzzy                 Disable fuzzy matching for scope.
@@ -44,7 +44,7 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm would fetch value by specified <key chain> in the first document under <scope>. <scope> allows fuzzy querying by default (use empty scope "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects or key-value pair whose <value> is a string and can be accessed by <key chain>. <key chain> is a list of keys separated by white space.`
+If no flag is specified, pm would fetch object or sentence value by specified <key chain> in the first document under <scope>. <scope> allows fuzzy querying by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects and sentence which is key-value pair with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
     );
 } else if (args.version) {
     // version number
@@ -138,7 +138,7 @@ function print(obj) {
 function parseIndex(indexIn) {
     let index = parseInt(indexIn);
     if (isNaN(index)) {
-        print('Index must be a number.\nUse --help for more information.');
+        print('Index can only be number or "all".\nUse --help for more information.');
         process.exit(0);
     }
     return index;

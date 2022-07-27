@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Your one-stop privacy manager.",
   "private": true,
   "bin": {
@@ -9,15 +9,13 @@
   "scripts": {
     "cli-test": "node ./cli-test.js"
   },
-  "keywords": ["privacy", "password", "JSON", "cli", "web interface"],
+  "keywords": ["privacy", "passwords", "JSON", "cli"],
   "author": "RyanXin",
   "license": "ISC",
   "dependencies": {
-    "minimist": "^1.2.5"
+    "minimist": "^1.2.0"
   },
   "devDependencies": {
-    "pmanager": "file:",
-    "webpack": "^5.65.0",
-    "webpack-cli": "^4.9.1"
+    "pmanager": "file:./"
   }
 }
