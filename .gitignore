@@ -106,4 +106,3 @@ dist
 # Development
 .vscode/
 todo.txt
-dataStorage.json
