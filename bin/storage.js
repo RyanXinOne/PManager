@@ -62,7 +62,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
             document = document[scopes[0]];
             break;
         default:
-            return response(true, `Multiple scopes found. Please specify which one you want, or add "--no-fuzzy" for exact match.`, scopes);
+            return response(true, `${scopes.length} scopes found. Please specify which one you want, or add flag "--no-fuzzy" for exact matching.`, scopes);
     }
     if (index === 'all') {
         let objs = [];

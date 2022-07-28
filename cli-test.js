@@ -13,4 +13,4 @@ function execute(cmd) {
     });
 }
 
-execute(`npx pm --search key`);
+execute(`npx pm *`);

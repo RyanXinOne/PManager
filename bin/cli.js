@@ -46,7 +46,7 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> enables fuzzy matching by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
+If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
     );
 } else if (args.version) {
     // version number
@@ -83,6 +83,8 @@ If no flag is specified, pm is under query mode by default. It would fetch objec
     if (scope === undefined) {
         print('Scope name cannot be missing.\nUse --help for more information.');
         process.exit(0);
+    } else if (scope === "*") {
+        scope = '';
     }
     let index;
 
