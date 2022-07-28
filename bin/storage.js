@@ -41,7 +41,7 @@ function writeData(data, filePath = undefined) {
  * Fetch document or object by scope, index, and key chain specified.
  * 
  * @param {string} scope scope name
- * @param {Integer|"all"} index index of document to be fetched under the scope, string value "all" returns all documents under the scope
+ * @param {Integer | string} index index of document to be fetched under the scope, string value "all" returns all documents under the scope
  * @param {Array.<string>} keyChain key chain of document
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
@@ -66,7 +66,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
     }
     if (index === 'all') {
         let objs = [];
-        for (let doc of document) {
+        for (const doc of document) {
             let res = _queryDoc(keyChain, doc);
             if (res.success) {
                 objs.push(res.data);
@@ -102,7 +102,7 @@ function _queryDataStore(targetScope, dataStore, noFuzzy = false) {
         }
     } else {
         targetScope = targetScope.toLowerCase();
-        for (let scope in dataStore) {
+        for (const scope in dataStore) {
             let lowerScope = scope.toLowerCase();
             if (lowerScope.indexOf(targetScope) > -1) {
                 res.push(scope);
@@ -277,6 +277,62 @@ function _deleteDoc(keyChain, document, force) {
 }
 
 /**
+ * Search scopes that contain object/sentence keys by text specified where fuzzy
+ * matching is enabled.
+ * 
+ * @param {string} text text to be matched
+ */
+function _search(text) {
+    let data = readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    text = text.toLowerCase();
+    let scopes = [];
+    // iterate over all scopes
+    for (const scope in data) {
+        let documents = data[scope];
+        // iterate over all documents
+        for (const doc of documents) {
+            // search document
+            if (_searchObj(doc, text)) {
+                scopes.push(scope);
+                break;
+            }
+        }
+    }
+    // return scopes search result
+    switch (scopes.length) {
+        case 0:
+            return response(false, `No eligible scope found.`);
+        case 1:
+            return _get(scopes[0], "all", [], true);
+        default:
+            return response(true, `${scopes.length} eligible scopes found.`, scopes);
+    }
+}
+
+function _searchObj(obj, text) {
+    // iterate over keys of object
+    for (const key in obj) {
+        let lowerKey = key.toLowerCase();
+        // match object/sentence key
+        if (lowerKey.indexOf(text) > -1) {
+            return true;
+        }
+        // recurse into nested object
+        if (Object.prototype.toString.call(obj[key]) === Object.prototype.toString.call({})) {
+            if (_searchObj(obj[key], text)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/**
  * Move a document from one position to another. Target scope would be created if it does not exist. Source document would be deleted first and then be inserted into target index under target scope. Empty scope would be deleted automatically.
  * 
  * @param {string} scope1 source scope name
@@ -335,7 +391,7 @@ function _import(filePath) {
             if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({})) {
                 return false;
             }
-            for (let key in obj) {
+            for (const key in obj) {
                 if (typeof obj[key] !== 'string') {
                     queue.push(obj[key]);
                 }
@@ -343,7 +399,7 @@ function _import(filePath) {
         }
         return true;
     };
-    for (let scope in data) {
+    for (const scope in data) {
         let documents = data[scope];
         if (!Array.isArray(documents)) {
             return response(false, 'Non-compliant file input.');
@@ -381,12 +437,17 @@ const iniData = {
 }
 if (!fs.existsSync(config.fileStoragePath)) {
     fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
-    fs.writeFileSync(config.fileStoragePath, JSON.stringify(iniData, null, 4));
+    let res = writeData(iniData);
+    if (!res.success) {
+        console.error("Failed to initialise data storage: %s", res.message);
+        process.exit(0);
+    }
 }
 
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
+exports.search = _search;
 exports.move = _move;
 exports.import = _import;
 exports.export = _export;

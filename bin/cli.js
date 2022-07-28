@@ -5,8 +5,8 @@ const fs = require('fs');
 
 const argOpts = {
     string: '_',
-    boolean: ['help', 'version', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export'],
-    alias: { 'help': 'h', 'version': 'v', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'index': 'n', 'force': 'f' },
+    boolean: ['help', 'version', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export'],
+    alias: { 'help': 'h', 'version': 'v', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'index': 'n', 'force': 'f' },
     default: { 'n': 0, 'fuzzy': true, 'parse-flag': true },
     stopEarly: false
 };
@@ -23,14 +23,16 @@ if (args.help) {
 
 Usage:
     pm [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
+    pm -s <text>
     pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
     pm --help|--version
 
 Options:
-    -n <index>                 Index of document under the <scope>. When fetch, string value "all" is allowed to fetch all. When create, a new document would be created if index is out of range. Default: 0
+    -n <index>                 Index of document under the <scope>. When query, string value "all" is allowed to fetch all. When create, a new document would be created if index is out of range. Default: 0
     --index=<index>            Same as -n <index>.
+    -s, --search               Search scope(s) that contains object/sentence key by text specified. Fuzzy matching is enabled.
     -e, -m, --edit             Modify existing sentence in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
     -c, --create               Create new object and sentence if any key in <key chain> does not exist.
@@ -44,12 +46,21 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm would fetch object or sentence value by specified <key chain> in the first document under <scope>. <scope> allows fuzzy querying by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> can only contain nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
+If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> allows fuzzy matching by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
     );
 } else if (args.version) {
     // version number
     let package = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
     print(package.version);
+} else if (args.search) {
+    // search
+    let res = storage.search(args._[0]);
+    if (res.success) {
+        print(res.message);
+        print(res.data);
+    } else {
+        print(res.message);
+    }
 } else if (args.import || args.export) {
     // import/export data
     let filePath = args._[0];
@@ -111,7 +122,7 @@ If no flag is specified, pm would fetch object or sentence value by specified <k
             print(res.message);
         }
     } else {
-        // fetch
+        // query
         if (args.index === 'all') {
             index = args.index;
         } else {

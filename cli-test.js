@@ -13,4 +13,4 @@ function execute(cmd) {
     });
 }
 
-execute(`npx pm scope -n all`);
+execute(`npx pm --search kEY`);

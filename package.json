@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Your one-stop privacy manager.",
   "keywords": ["privacy", "passwords", "JSON", "cli"],
   "homepage": "https://github.com/RyanXinOne/PManager",
