@@ -30,23 +30,23 @@ Usage:
     pm --help|--version
 
 Options:
-    -n <index>                 Index of document under the <scope>. When query, string value "all" is allowed to fetch all. When create, a new document would be created if index is out of range. Default: 0
+    -n <index>                 Index of document under the <scope>. Under query mode, string value "all" is allowed to fetch all. Under create mode, a new document would be created if index is out of range. Default: 0
     --index=<index>            Same as -n <index>.
-    -s, --search               Search scope(s) that contains object/sentence key by text specified. Fuzzy matching is enabled.
-    -e, -m, --edit             Modify existing sentence in a document by specified <key chain> and <value>.
+    -s, --search               Search mode. Search scope(s) that contains object/sentence key by text specified. Fuzzy matching is enabled by default.
+    -e, -m, --edit             Edit mode. Modify existing sentence in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
-    -c, --create               Create new object and sentence if any key in <key chain> does not exist.
-    -d, --delete               Delete a document or sentence by <key chain> specified. Empty scope would be cleaned automatically.
-    -f, --force                Under editing mode, force to overwrite even if any key in <key chain> points to an existing object. Under deleting mode, force to delete even if the deleting target is an object.
-    --move                     Move a document from one position to another. <Target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
-    --no-fuzzy                 Disable fuzzy matching for scope.
+    -c, --create               Create mode. Create new object and sentence if any key in <key chain> does not exist.
+    -d, --delete               Delete mode. Delete a document or sentence by <key chain> specified. Empty scope would be cleaned automatically.
+    -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is an object.
+    --no-fuzzy                 Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
+    --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
     --import                   Import data from an external file.
     --export                   Export data to an external file.
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> allows fuzzy matching by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
+If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> enables fuzzy matching by default (use empty string "" to get all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
     );
 } else if (args.version) {
     // version number
@@ -54,7 +54,7 @@ If no flag is specified, pm is under query mode by default. It would fetch objec
     print(package.version);
 } else if (args.search) {
     // search
-    let res = storage.search(args._[0]);
+    let res = storage.search(args._[0], !args.fuzzy);
     if (res.success) {
         print(res.message);
         print(res.data);
@@ -128,7 +128,7 @@ If no flag is specified, pm is under query mode by default. It would fetch objec
         } else {
             index = parseIndex(args.index);
         }
-        let res = storage.get(scope, index, args._.slice(1), !args['fuzzy']);
+        let res = storage.get(scope, index, args._.slice(1), !args.fuzzy);
         if (res.success) {
             print(res.message);
             print(res.data);

@@ -94,7 +94,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
 /**
  * Fuzzy query scope(s) from dataStore.
  */
-function _queryDataStore(targetScope, dataStore, noFuzzy = false) {
+function _queryDataStore(targetScope, dataStore, noFuzzy) {
     let res = [];
     if (noFuzzy) {
         if (targetScope in dataStore) {
@@ -281,15 +281,18 @@ function _deleteDoc(keyChain, document, force) {
  * matching is enabled.
  * 
  * @param {string} text text to be matched
+ * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
-function _search(text) {
+function _search(text, noFuzzy = false) {
     let data = readData();
     if (data.success) {
         data = data.data;
     } else {
         return data;
     }
-    text = text.toLowerCase();
+    if (!noFuzzy) {
+        text = text.toLowerCase();
+    }
     let scopes = [];
     // iterate over all scopes
     for (const scope in data) {
@@ -297,7 +300,7 @@ function _search(text) {
         // iterate over all documents
         for (const doc of documents) {
             // search document
-            if (_searchObj(doc, text)) {
+            if (_searchObj(doc, text, noFuzzy)) {
                 scopes.push(scope);
                 break;
             }
@@ -314,17 +317,23 @@ function _search(text) {
     }
 }
 
-function _searchObj(obj, text) {
+function _searchObj(obj, text, noFuzzy) {
     // iterate over keys of object
     for (const key in obj) {
-        let lowerKey = key.toLowerCase();
         // match object/sentence key
-        if (lowerKey.indexOf(text) > -1) {
-            return true;
+        if (!noFuzzy) {
+            let lowerKey = key.toLowerCase();
+            if (lowerKey.indexOf(text) > -1) {
+                return true;
+            }
+        } else {
+            if (key === text) {
+                return true;
+            }
         }
         // recurse into nested object
         if (Object.prototype.toString.call(obj[key]) === Object.prototype.toString.call({})) {
-            if (_searchObj(obj[key], text)) {
+            if (_searchObj(obj[key], text, noFuzzy)) {
                 return true;
             }
         }
