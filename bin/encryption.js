@@ -1,22 +1,30 @@
 const config = require('./config.js');
 const crypto = require('crypto');
 
-const ivPhrase = 'AVERYSTRONGIV';
-
-const resizedIV = Buffer.allocUnsafe(16);
-const iv = crypto.createHash('sha256').update(ivPhrase).digest();
-iv.copy(resizedIV);
+const ALGORITHM_NAME = 'aes-256-gcm';
+const ALGORITHM_KEY_SIZE = 32;
+const ALGORITHM_NONCE_SIZE = 16;
+const ALGORITHM_TAG_SIZE = 16;
 
 function _encrypt(dataStr) {
-    const key = crypto.createHash('sha256').update(config.passphrase).digest();
-    let cipher = crypto.createCipheriv('aes-256-cbc', key, resizedIV);
-    return Buffer.concat([cipher.update(dataStr, 'utf8'), cipher.final()]);
+    let nonce = crypto.randomBytes(ALGORITHM_NONCE_SIZE);
+    let key = crypto.scryptSync(config.passphrase, nonce, ALGORITHM_KEY_SIZE);
+    let cipher = crypto.createCipheriv(ALGORITHM_NAME, key, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
+    let cipherText = Buffer.concat([cipher.update(dataStr, 'utf8'), cipher.final()]);
+
+    return Buffer.concat([nonce, cipherText, cipher.getAuthTag()]);
 }
 
 function _decrypt(dataBuf) {
-    const key = crypto.createHash('sha256').update(config.passphrase).digest();
-    let decipher = crypto.createDecipheriv('aes-256-cbc', key, resizedIV);
-    return decipher.update(dataBuf, null, 'utf8') + decipher.final('utf8');
+    let nonce = dataBuf.slice(0, ALGORITHM_NONCE_SIZE);
+    let key = crypto.scryptSync(config.passphrase, nonce, ALGORITHM_KEY_SIZE);
+    let decipher = crypto.createDecipheriv(ALGORITHM_NAME, key, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
+    let cipherText = dataBuf.slice(ALGORITHM_NONCE_SIZE, dataBuf.length - ALGORITHM_TAG_SIZE);
+
+    let authTag = dataBuf.slice(cipherText.length + ALGORITHM_NONCE_SIZE);
+    decipher.setAuthTag(authTag);
+
+    return decipher.update(cipherText, null, 'utf8') + decipher.final('utf8');
 }
 
 exports.encrypt = _encrypt;
