@@ -1,4 +1,5 @@
 const config = require('./config.js');
+const enc = require('./encryption.js');
 const path = require('path');
 const fs = require('fs');
 
@@ -17,7 +18,8 @@ function readData(filePath = undefined) {
     }
     let data;
     try {
-        data = fs.readFileSync(filePath, 'utf8');
+        let dataBuf = fs.readFileSync(filePath);
+        data = enc.decrypt(dataBuf);
         data = JSON.parse(data);
     } catch (err) {
         return response(false, err.message);
@@ -30,7 +32,9 @@ function writeData(data, filePath = undefined) {
         filePath = config.fileStoragePath;
     }
     try {
-        fs.writeFileSync(filePath, JSON.stringify(data, null, 4));
+        data = JSON.stringify(data, null, 4);
+        let dataBuf = enc.encrypt(data);
+        fs.writeFileSync(filePath, dataBuf);
     } catch (err) {
         return response(false, err.message);
     }

@@ -105,5 +105,5 @@ dist
 
 # Development
 .vscode/
-dataStorage.json
+PMDATA
 todo.txt
