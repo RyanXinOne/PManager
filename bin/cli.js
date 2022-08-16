@@ -3,6 +3,7 @@ const storage = require('./storage.js');
 const parseArgs = require('minimist');
 const fs = require('fs');
 
+
 const argOpts = {
     string: '_',
     boolean: ['help', 'version', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export'],

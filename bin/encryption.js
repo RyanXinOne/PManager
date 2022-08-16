@@ -1,6 +1,7 @@
 const config = require('./config.js');
 const crypto = require('crypto');
 
+
 const ALGORITHM_NAME = 'aes-256-gcm';
 const ALGORITHM_KEY_SIZE = 32;
 const ALGORITHM_NONCE_SIZE = 16;
