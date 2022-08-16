@@ -32,7 +32,7 @@ function writeData(data, filePath = undefined) {
         filePath = config.fileStoragePath;
     }
     try {
-        data = JSON.stringify(data, null, 4);
+        data = JSON.stringify(data);
         let dataBuf = enc.encrypt(data);
         fs.writeFileSync(filePath, dataBuf);
     } catch (err) {

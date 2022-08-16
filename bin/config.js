@@ -21,7 +21,7 @@ const configPath = path.join(pmDataFolder, 'config.json');
 if (!fs.existsSync(configPath)) {
     fs.mkdirSync(path.dirname(configPath), { recursive: true });
     try {
-        let configText = JSON.stringify({}, null, 4);
+        let configText = JSON.stringify({ description: "Here are pmanager user configurations." }, null, 2);
         fs.writeFileSync(configPath, configText, 'utf8');
     } catch (err) {
         console.error("Failed to initialise config file: %s", res.message);
@@ -33,8 +33,8 @@ if (!fs.existsSync(configPath)) {
 let config;
 try {
     let configText = fs.readFileSync(configPath, 'utf8');
-    let fileConfig = JSON.parse(configText);
-    config = { ...defaultConfig, ...fileConfig };
+    let userConfig = JSON.parse(configText);
+    config = { ...defaultConfig, ...userConfig };
 } catch (err) {
     console.error("Failed to read or parse config file: %s", err.message);
     process.exit(0);
