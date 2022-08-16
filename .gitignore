@@ -105,5 +105,5 @@ dist
 
 # Development
 .vscode/
-PMDATA
+pmdata/
 todo.txt
