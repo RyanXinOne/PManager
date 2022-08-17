@@ -12,10 +12,8 @@ function response(success, message = null, data = null) {
     };
 }
 
-function readData(filePath = undefined) {
-    if (filePath === undefined) {
-        filePath = config.fileStoragePath;
-    }
+function readData() {
+    const filePath = config.fileStoragePath;
     let data;
     try {
         let dataBuf = fs.readFileSync(filePath);
@@ -27,10 +25,8 @@ function readData(filePath = undefined) {
     return response(true, null, data);
 }
 
-function writeData(data, filePath = undefined) {
-    if (filePath === undefined) {
-        filePath = config.fileStoragePath;
-    }
+function writeData(data) {
+    const filePath = config.fileStoragePath;
     try {
         data = JSON.stringify(data);
         let dataBuf = enc.encrypt(data);
@@ -386,11 +382,13 @@ function _move(scope1, index1, scope2, index2) {
 }
 
 function _import(filePath) {
-    let data = readData(filePath);
-    if (data.success) {
-        data = data.data;
-    } else {
-        return data;
+    let data;
+    // read json data from file
+    try {
+        data = fs.readFileSync(filePath, 'utf8');
+        data = JSON.parse(data);
+    } catch (err) {
+        return response(false, err.message);
     }
     // check json structure
     if (Object.prototype.toString.call(data) !== Object.prototype.toString.call({})) {
@@ -433,7 +431,14 @@ function _export(filePath) {
     } else {
         return data;
     }
-    return writeData(data, filePath);
+    // write json data to file
+    try {
+        data = JSON.stringify(data, null, 2);
+        fs.writeFileSync(filePath, data, 'utf8');
+    } catch (err) {
+        return response(false, err.message);
+    }
+    return response(true);
 }
 
 // initialise data storage if non-existent
