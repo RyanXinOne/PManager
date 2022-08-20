@@ -11,49 +11,62 @@ const ALGORITHM_KEY_SIZE = 32;
 const ALGORITHM_NONCE_SIZE = 16;
 const ALGORITHM_TAG_SIZE = 16;
 
+const KEY_CACHE_PATH = path.join(os.tmpdir(), 'pmanager', 'KEYCACHE');
+fs.mkdirSync(path.dirname(KEY_CACHE_PATH), { recursive: true });
+
 let ACTIVE_KEY = undefined;
 
 /**
- * Flush key cache by asking user passphrase from command line input. The key is
- * generated from passphrase and saved into local cache file.
+ * Flush local key cache by input passphrase. If not provided, ask user passphrase
+ * from command line input. The key is generated from passphrase and saved into
+ * local temporary cache file.
  * 
- * @param {string} path key cache file path
+ * @param {string} passphrase passphrase to generate key from
  */
-function _flushKeyCache(path) {
-    const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
-    let passphrase = readlineSync.question('Passphrase (not displayed): ', readlineOptions);
+function _flushKeyCache(passphrase = undefined) {
+    if (passphrase === undefined) {
+        const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
+        passphrase = readlineSync.question('Passphrase (not displayed): ', readlineOptions);
+    }
     let salt = crypto.createHash('sha256').update(passphrase).digest();
     let key = crypto.scryptSync(passphrase, salt, ALGORITHM_KEY_SIZE);
-    fs.writeFileSync(path, key);
+    fs.writeFileSync(KEY_CACHE_PATH, key);
 }
 
 /**
- * Get the key that is used for encryption.
- * This method uses existing active key to avoid fetch from cache multiple times in one process.
- * If no active key, then try to fetch from cache.
- * If failed to fetch from cache, then flush key cache.
- * 
- * @returns {Buffer} encryption key
+ * Set up ACTIVE_KEY that is used for encryption.
+ * If already set up, use existing active key to avoid fetching multiple times from cache.
+ * If no active key, then fetch key from cache.
+ * If cache is not ready, then flush key cache.
  */
-function _getKey() {
-    if (ACTIVE_KEY === undefined) {
-        const keyCachePath = path.join(os.tmpdir(), 'pmanager', 'KEYCACHE');
-        // check if key cache exists
-        if (!fs.existsSync(keyCachePath)) {
-            fs.mkdirSync(path.dirname(keyCachePath), { recursive: true });
-            _flushKeyCache(keyCachePath);
-        } else {
-            // check if key cache expires
-            let cacheStat = fs.statSync(keyCachePath);
-            let expireTime = Number(config.doNotAskPassphraseInSec) || 0;
-            if (Date.now() - cacheStat.mtime.getTime() > 1000 * expireTime) {
-                _flushKeyCache(keyCachePath);
-            }
-        }
-        // read key from key cache
-        ACTIVE_KEY = fs.readFileSync(keyCachePath)
+function _prepareActiveKey() {
+    // check if active key is already set up
+    if (ACTIVE_KEY !== undefined) {
+        return;
     }
-    return ACTIVE_KEY;
+    // check if key cache exists
+    if (!fs.existsSync(KEY_CACHE_PATH)) {
+        _flushKeyCache();
+    } else {
+        // check if key cache expires
+        let cacheStat = fs.statSync(KEY_CACHE_PATH);
+        let expireTime = Number(config.doNotAskPassphraseInSec) || 0;
+        if (Date.now() - cacheStat.mtime.getTime() > 1000 * expireTime) {
+            _flushKeyCache();
+        }
+    }
+    ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+}
+
+/**
+ * Manually set ACTIVE_KEY. Use given passphrase to flush local key cache and read
+ * key from it.
+ * 
+ * @param {string} passphrase passphrase to generate key from
+ */
+function _setActiveKey(passphrase) {
+    _flushKeyCache(passphrase);
+    ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
 }
 
 /**
@@ -63,8 +76,9 @@ function _getKey() {
  * @returns {Buffer} encrypted binary buffer
  */
 function _encrypt(dataStr) {
+    _prepareActiveKey();
     let nonce = crypto.randomBytes(ALGORITHM_NONCE_SIZE);
-    let cipher = crypto.createCipheriv(ALGORITHM_NAME, _getKey(), nonce, { authTagLength: ALGORITHM_TAG_SIZE });
+    let cipher = crypto.createCipheriv(ALGORITHM_NAME, ACTIVE_KEY, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
     let cipherText = Buffer.concat([cipher.update(dataStr, 'utf8'), cipher.final()]);
 
     return Buffer.concat([nonce, cipherText, cipher.getAuthTag()]);
@@ -77,8 +91,9 @@ function _encrypt(dataStr) {
  * @returns {string} decrypted text string
  */
 function _decrypt(dataBuf) {
+    _prepareActiveKey();
     let nonce = dataBuf.subarray(0, ALGORITHM_NONCE_SIZE);
-    let decipher = crypto.createDecipheriv(ALGORITHM_NAME, _getKey(), nonce, { authTagLength: ALGORITHM_TAG_SIZE });
+    let decipher = crypto.createDecipheriv(ALGORITHM_NAME, ACTIVE_KEY, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
     let cipherText = dataBuf.subarray(ALGORITHM_NONCE_SIZE, dataBuf.length - ALGORITHM_TAG_SIZE);
 
     let authTag = dataBuf.subarray(cipherText.length + ALGORITHM_NONCE_SIZE);
@@ -87,5 +102,6 @@ function _decrypt(dataBuf) {
     return decipher.update(cipherText, null, 'utf8') + decipher.final('utf8');
 }
 
+exports.setKey = _setActiveKey;
 exports.encrypt = _encrypt;
 exports.decrypt = _decrypt;
