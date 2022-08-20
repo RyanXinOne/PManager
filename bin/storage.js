@@ -381,6 +381,11 @@ function _move(scope1, index1, scope2, index2) {
     return writeData(data);
 }
 
+/**
+ * Import data from JSON file. JSON structure is checked to ensure compliance.
+ * 
+ * @param {string} filePath path to JSON file
+ */
 function _import(filePath) {
     let data;
     // read json data from file
@@ -424,6 +429,11 @@ function _import(filePath) {
     return writeData(data);
 }
 
+/**
+ * Export data to JSON file.
+ * 
+ * @param {string} filePath path to JSON file
+ */
 function _export(filePath) {
     let data = readData();
     if (data.success) {

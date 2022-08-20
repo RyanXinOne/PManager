@@ -2,7 +2,12 @@
   "name": "pmanager",
   "version": "0.1.6",
   "description": "Your one-stop privacy manager.",
-  "keywords": ["privacy", "passwords", "JSON", "cli"],
+  "keywords": [
+    "privacy",
+    "passwords",
+    "JSON",
+    "cli"
+  ],
   "homepage": "https://github.com/RyanXinOne/PManager",
   "author": "Ryan Xin",
   "private": true,
@@ -10,10 +15,11 @@
     "pm": "./bin/cli.js"
   },
   "scripts": {
-    "cli-test": "set PMENV=dev&& node ./cli-test.js"
+    "cli-test": "set PMENV=dev&& npx pm *"
   },
   "dependencies": {
-    "minimist": "^1.2.0"
+    "minimist": "^1.2.0",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "pmanager": "file:./"

@@ -13,7 +13,7 @@ const pmDataFolder = process.env.PMENV === 'dev' ?
 
 const defaultConfig = {
     fileStoragePath: path.join(pmDataFolder, 'PMDATA'),
-    passphrase: 'AVERYSTRONGPASSWORD'
+    doNotAskPassphraseInSec: 300
 };
 
 // initialise config file if non-existent
