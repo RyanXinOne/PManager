@@ -309,7 +309,7 @@ function _search(text, noFuzzy = false) {
     // return scopes search result
     switch (scopes.length) {
         case 0:
-            return response(false, `No eligible scope found.`);
+            return response(false, `No eligible scope found by searching "${text}".`);
         case 1:
             return _get(scopes[0], "all", [], true);
         default:
