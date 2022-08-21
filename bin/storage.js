@@ -2,9 +2,12 @@ const config = require('./config.js');
 const enc = require('./encryption.js');
 const path = require('path');
 const fs = require('fs');
+const readlineSync = require('readline-sync');
 
 
-function response(success, message = null, data = null) {
+fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
+
+function _response(success, message = null, data = null) {
     return {
         success: success,
         message: message,
@@ -12,29 +15,62 @@ function response(success, message = null, data = null) {
     };
 }
 
-function readData() {
-    const filePath = config.fileStoragePath;
+/**
+ * Initialise data storage if non-existent.
+ */
+function _setUpDataStorage() {
+    if (!fs.existsSync(config.fileStoragePath)) {
+        // ask user passphrase
+        const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
+        let passphrase, passphrase2;
+        do {
+            passphrase = readlineSync.question('Set passphrase (not displayed): ', readlineOptions);
+            passphrase2 = readlineSync.question('Confirm passphrase (not displayed): ', readlineOptions);
+        } while (passphrase !== passphrase2);
+        enc.setKey(passphrase);
+
+        // write initial data
+        const iniData = {
+            "scopeDemo": [
+                {
+                    "name": "document1",
+                    "description": "This is a sample document.",
+                    "nestObj": {
+                        "tmpKey": "fetch me by key chain `scopeDemo nestObj tmpKey`"
+                    }
+                }
+            ]
+        }
+        let res = _writeData(iniData);
+        if (!res.success) {
+            console.error("Failed to initialise data storage: %s", res.message);
+            process.exit(0);
+        }
+    }
+}
+
+function _readData() {
+    _setUpDataStorage();
     let data;
     try {
-        let dataBuf = fs.readFileSync(filePath);
+        let dataBuf = fs.readFileSync(config.fileStoragePath);
         data = enc.decrypt(dataBuf);
         data = JSON.parse(data);
     } catch (err) {
-        return response(false, err.message);
+        return _response(false, err.message);
     }
-    return response(true, null, data);
+    return _response(true, null, data);
 }
 
-function writeData(data) {
-    const filePath = config.fileStoragePath;
+function _writeData(data) {
     try {
         data = JSON.stringify(data);
         let dataBuf = enc.encrypt(data);
-        fs.writeFileSync(filePath, dataBuf);
+        fs.writeFileSync(config.fileStoragePath, dataBuf);
     } catch (err) {
-        return response(false, err.message);
+        return _response(false, err.message);
     }
-    return response(true);
+    return _response(true);
 }
 
 /**
@@ -46,7 +82,7 @@ function writeData(data) {
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
 function _get(scope, index, keyChain, noFuzzy = false) {
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -57,12 +93,12 @@ function _get(scope, index, keyChain, noFuzzy = false) {
     let scopes = _queryDataStore(scope, document, noFuzzy);
     switch (scopes.length) {
         case 0:
-            return response(false, `Scope "${scope}" does not exist.`);
+            return _response(false, `Scope "${scope}" does not exist.`);
         case 1:
             document = document[scopes[0]];
             break;
         default:
-            return response(true, `${scopes.length} scopes found. Please specify which one you want, or add flag "--no-fuzzy" for exact matching.`, scopes);
+            return _response(true, `${scopes.length} scopes found. Please specify which one you want, or add flag "--no-fuzzy" for exact matching.`, scopes);
     }
     if (index === 'all') {
         let objs = [];
@@ -74,20 +110,20 @@ function _get(scope, index, keyChain, noFuzzy = false) {
         }
         switch (objs.length) {
             case 0:
-                return response(false, `No compliant objects found under scope "${scopes[0]}".`);
+                return _response(false, `No compliant objects found under scope "${scopes[0]}".`);
             case 1:
-                return response(true, `Scope: "${scopes[0]}"`, objs[0]);
+                return _response(true, `Scope: "${scopes[0]}"`, objs[0]);
             default:
-                return response(true, `Scope: "${scopes[0]}", ${objs.length} objects found`, objs);
+                return _response(true, `Scope: "${scopes[0]}", ${objs.length} objects found`, objs);
         }
     } else {
         // check existence of index
         if (document[index] === undefined) {
-            return response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
+            return _response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
         }
         document = document[index];
         let res = _queryDoc(keyChain, document);
-        return res.success ? response(true, `Scope: "${scopes[0]}"`, res.data) : res;
+        return res.success ? _response(true, `Scope: "${scopes[0]}"`, res.data) : res;
     }
 }
 
@@ -119,11 +155,11 @@ function _queryDoc(keyChain, document) {
         obj = obj[keyChain[i]];
         // check undefined
         if (obj === undefined) {
-            return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
+            return _response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
         }
     }
     // get value by sentence key
-    return response(true, null, obj);
+    return _response(true, null, obj);
 }
 
 /**
@@ -140,7 +176,7 @@ function _queryDoc(keyChain, document) {
 function _set(scope, index, keyChain, value, insert = false, create = false, force = false) {
     if (insert) create = true;
 
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -152,7 +188,7 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
         if (create) {
             document[scope] = [];
         } else {
-            return response(false, `Scope "${scope}" does not exist.`);
+            return _response(false, `Scope "${scope}" does not exist.`);
         }
     }
     document = document[scope];
@@ -161,7 +197,7 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
         if (create) {
             index = document.push({}) - 1;
         } else {
-            return response(false, `Scope "${scope}" does not have index ${index}.`);
+            return _response(false, `Scope "${scope}" does not have index ${index}.`);
         }
     } else {
         if (insert) {
@@ -171,13 +207,13 @@ function _set(scope, index, keyChain, value, insert = false, create = false, for
     }
     document = document[index];
     let res = _updateDoc(keyChain, value, document, create, force);
-    return res.success ? writeData(data) : res;
+    return res.success ? _writeData(data) : res;
 }
 
 function _updateDoc(keyChain, value, document, create, force) {
     // check key chain
     if (keyChain.length === 0) {
-        return response(false, 'Key chain cannot be missing.');
+        return _response(false, 'Key chain cannot be missing.');
     }
     let obj = document;
     let i;
@@ -187,7 +223,7 @@ function _updateDoc(keyChain, value, document, create, force) {
             if (create) {
                 obj[keyChain[i]] = {};
             } else {
-                return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
+                return _response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
             }
         }
         // iterate into nested object
@@ -198,20 +234,20 @@ function _updateDoc(keyChain, value, document, create, force) {
         if (!create) {
             // check if the last key points to an object
             if (typeof obj[keyChain[i]] === 'object' && !force) {
-                return response(false, `Not allowed to overwrite object under "${keyChain.join('.')}".`);
+                return _response(false, `Not allowed to overwrite object under "${keyChain.join('.')}".`);
             }
             obj[keyChain[i]] = value;
         } else {
-            return response(false, `Key "${keyChain.join('.')}" already exists.`);
+            return _response(false, `Key "${keyChain.join('.')}" already exists.`);
         }
     } else {
         if (create) {
             obj[keyChain[i]] = value;
         } else {
-            return response(false, `Key "${keyChain.join('.')}" does not exist.`);
+            return _response(false, `Key "${keyChain.join('.')}" does not exist.`);
         }
     }
-    return response(true);
+    return _response(true);
 }
 
 /**
@@ -223,7 +259,7 @@ function _updateDoc(keyChain, value, document, create, force) {
  * @param {boolean} force force to delete even if the deleting target is an object
  */
 function _delete(scope, index, keyChain, force = false) {
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -232,7 +268,7 @@ function _delete(scope, index, keyChain, force = false) {
     let document = data;
     // check existence of scope and index
     if (document[scope] === undefined || document[scope][index] === undefined) {
-        return response(false, `Scope "${scope}" or index ${index} does not exist.`);
+        return _response(false, `Scope "${scope}" or index ${index} does not exist.`);
     }
     document = document[scope];
     if (keyChain.length === 0) {
@@ -242,14 +278,14 @@ function _delete(scope, index, keyChain, force = false) {
             if (document.length === 0) {
                 delete data[scope];
             }
-            return writeData(data);
+            return _writeData(data);
         } else {
-            return response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
+            return _response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
         }
     }
     document = document[index];
     let res = _deleteDoc(keyChain, document, force);
-    return res.success ? writeData(data) : res;
+    return res.success ? _writeData(data) : res;
 }
 
 function _deleteDoc(keyChain, document, force) {
@@ -260,20 +296,20 @@ function _deleteDoc(keyChain, document, force) {
         obj = obj[keyChain[i]];
         // check existence
         if (obj === undefined) {
-            return response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
+            return _response(false, `Key "${keyChain.slice(0, i + 1).join('.')}" does not exist.`);
         }
     }
     // check existence
     if (!(keyChain[i] in obj)) {
-        return response(false, `Key "${keyChain.join('.')}" does not exist.`);
+        return _response(false, `Key "${keyChain.join('.')}" does not exist.`);
     }
     // check object
     if (typeof obj[keyChain[i]] === 'object' && !force) {
-        return response(false, `Not allowed to delete object under "${keyChain.join('.')}".`);
+        return _response(false, `Not allowed to delete object under "${keyChain.join('.')}".`);
     }
     // delete sentence by sentence key
     delete obj[keyChain[i]];
-    return response(true);
+    return _response(true);
 }
 
 /**
@@ -284,7 +320,7 @@ function _deleteDoc(keyChain, document, force) {
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
 function _search(text, noFuzzy = false) {
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -309,11 +345,11 @@ function _search(text, noFuzzy = false) {
     // return scopes search result
     switch (scopes.length) {
         case 0:
-            return response(false, `No eligible scope found by searching "${text}".`);
+            return _response(false, `No eligible scope found by searching "${text}".`);
         case 1:
             return _get(scopes[0], "all", [], true);
         default:
-            return response(true, `${scopes.length} eligible scopes found.`, scopes);
+            return _response(true, `${scopes.length} eligible scopes found.`, scopes);
     }
 }
 
@@ -350,7 +386,7 @@ function _searchObj(obj, text, noFuzzy) {
  * @param {Integer} index2 target index
  */
 function _move(scope1, index1, scope2, index2) {
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -359,7 +395,7 @@ function _move(scope1, index1, scope2, index2) {
     let document = data;
     // check existence of source scope and index
     if (document[scope1] === undefined || document[scope1][index1] === undefined) {
-        return response(false, `Source scope "${scope1}" or index ${index1} does not exist.`);
+        return _response(false, `Source scope "${scope1}" or index ${index1} does not exist.`);
     }
     document = document[scope1][index1];
     // delete source document
@@ -378,7 +414,7 @@ function _move(scope1, index1, scope2, index2) {
         delete data[scope1];
     }
 
-    return writeData(data);
+    return _writeData(data);
 }
 
 /**
@@ -393,11 +429,11 @@ function _import(filePath) {
         data = fs.readFileSync(filePath, 'utf8');
         data = JSON.parse(data);
     } catch (err) {
-        return response(false, err.message);
+        return _response(false, err.message);
     }
     // check json structure
     if (Object.prototype.toString.call(data) !== Object.prototype.toString.call({})) {
-        return response(false, 'Non-compliant file input.');
+        return _response(false, 'Non-compliant file input.');
     }
     // a helper function
     let consistsOfObjectsOnly = (obj) => {
@@ -418,15 +454,15 @@ function _import(filePath) {
     for (const scope in data) {
         let documents = data[scope];
         if (!Array.isArray(documents)) {
-            return response(false, 'Non-compliant file input.');
+            return _response(false, 'Non-compliant file input.');
         }
         for (let i = 0; i < documents.length; i++) {
             if (!consistsOfObjectsOnly(documents[i])) {
-                return response(false, 'Non-compliant file input.');
+                return _response(false, 'Non-compliant file input.');
             }
         }
     }
-    return writeData(data);
+    return _writeData(data);
 }
 
 /**
@@ -435,7 +471,7 @@ function _import(filePath) {
  * @param {string} filePath path to JSON file
  */
 function _export(filePath) {
-    let data = readData();
+    let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
@@ -446,30 +482,9 @@ function _export(filePath) {
         data = JSON.stringify(data, null, 2);
         fs.writeFileSync(filePath, data, 'utf8');
     } catch (err) {
-        return response(false, err.message);
+        return _response(false, err.message);
     }
-    return response(true);
-}
-
-// initialise data storage if non-existent
-const iniData = {
-    "scope0": [
-        {
-            "name": "document1",
-            "description": "This is a sample document.",
-            "object2": {
-                "sentenceKey": "fetch me by key chain `scope0 object2 sentenceKey`"
-            }
-        }
-    ]
-}
-if (!fs.existsSync(config.fileStoragePath)) {
-    fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
-    let res = writeData(iniData);
-    if (!res.success) {
-        console.error("Failed to initialise data storage: %s", res.message);
-        process.exit(0);
-    }
+    return _response(true);
 }
 
 exports.get = _get;
