@@ -62,8 +62,8 @@ Options:
     -e, -m, --edit             Edit mode. Modify existing sentence in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
     -c, --create               Create mode. Create new object and sentence if any key in <key chain> does not exist.
-    -d, --delete               Delete mode. Delete a document or sentence by <key chain> specified. Empty scope would be cleaned automatically.
-    -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is an object.
+    -d, --delete               Delete mode. Delete a sentence by <key chain> specified. Empty document and scope would be cleaned automatically.
+    -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is a document or object.
     --no-fuzzy                 Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
     --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.

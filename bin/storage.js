@@ -98,7 +98,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
     let scopes = _queryDataStore(scope, document, noFuzzy);
     switch (scopes.length) {
         case 0:
-            return _response(false, `Scope "${scope}" does not exist.`);
+            return _response(false, `No scope found.`);
         case 1:
             document = document[scopes[0]];
             break;
@@ -119,7 +119,7 @@ function _get(scope, index, keyChain, noFuzzy = false) {
             case 1:
                 return _response(true, `Scope: "${scopes[0]}"`, objs[0]);
             default:
-                return _response(true, `Scope: "${scopes[0]}", ${objs.length} objects found`, objs);
+                return _response(true, `Scope: "${scopes[0]}", ${objs.length} documents/objects found`, objs);
         }
     } else {
         // check existence of index
@@ -277,9 +277,10 @@ function _delete(scope, index, keyChain, force = false) {
     }
     document = document[scope];
     if (keyChain.length === 0) {
-        // delete whole document
+        // force to delete document
         if (force) {
             document.splice(index, 1);
+            // clean scope
             if (document.length === 0) {
                 delete data[scope];
             }
@@ -288,9 +289,19 @@ function _delete(scope, index, keyChain, force = false) {
             return _response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
         }
     }
-    document = document[index];
-    let res = _deleteDoc(keyChain, document, force);
-    return res.success ? _writeData(data) : res;
+    let res = _deleteDoc(keyChain, document[index], force);
+    if (!res.success) {
+        return res;
+    }
+    // clean document if no sentence left
+    if (Object.keys(document[index]).length === 0) {
+        document.splice(index, 1);
+        // clean scope
+        if (document.length === 0) {
+            delete data[scope];
+        }
+    }
+    return _writeData(data);
 }
 
 function _deleteDoc(keyChain, document, force) {
