@@ -68,6 +68,7 @@ function _readData() {
 }
 
 function _writeData(data) {
+    _setUpDataStorage();
     try {
         data = JSON.stringify(data);
         let dataBuf = enc.encrypt(data);
