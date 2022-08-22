@@ -1,8 +1,8 @@
-const config = require('./config.js');
-const enc = require('./encryption.js');
 const path = require('path');
 const fs = require('fs');
-const readlineSync = require('readline-sync');
+const config = require('./config.js');
+const enc = require('./encryption.js');
+const { askSecret } = require('./utils.js');
 
 
 fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
@@ -21,11 +21,10 @@ function _response(success, message = null, data = null) {
 function _setUpDataStorage() {
     if (!fs.existsSync(config.fileStoragePath)) {
         // ask user passphrase
-        const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
         let passphrase, passphrase2;
         do {
-            passphrase = readlineSync.question('Set passphrase (not displayed): ', readlineOptions);
-            passphrase2 = readlineSync.question('Confirm passphrase (not displayed): ', readlineOptions);
+            passphrase = askSecret('Set passphrase (not displayed): ');
+            passphrase2 = askSecret('Confirm passphrase (not displayed): ');
         } while (passphrase !== passphrase2);
         enc.setKey(passphrase);
 

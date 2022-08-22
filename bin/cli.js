@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const storage = require('./storage.js');
 const minimist = require('minimist');
 const fs = require('fs');
+const storage = require('./storage.js');
 
 
 function print(obj) {

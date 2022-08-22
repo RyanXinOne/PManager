@@ -1,20 +1,22 @@
-const config = require('./config.js');
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const readlineSync = require('readline-sync');
+const config = require('./config.js');
+const { sleep, askSecret } = require('./utils.js');
 
 
 const ALGORITHM_NAME = 'aes-256-gcm';
 const ALGORITHM_KEY_SIZE = 32;
 const ALGORITHM_NONCE_SIZE = 16;
 const ALGORITHM_TAG_SIZE = 16;
+const PASSPHRASE_TRIAL_LIMIT = 5;
 
 const KEY_CACHE_PATH = path.join(os.tmpdir(), 'pmanager', 'KEYCACHE');
 fs.mkdirSync(path.dirname(KEY_CACHE_PATH), { recursive: true });
 
-let ACTIVE_KEY = undefined;
+let ACTIVE_KEY;
+_setActiveKey('');  // try empty passphrase by default
 
 /**
  * Flush local key cache by input passphrase. If not provided, ask user passphrase
@@ -25,8 +27,7 @@ let ACTIVE_KEY = undefined;
  */
 function _flushKeyCache(passphrase = undefined) {
     if (passphrase === undefined) {
-        const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
-        passphrase = readlineSync.question('Passphrase (not displayed): ', readlineOptions);
+        passphrase = askSecret('Passphrase (not displayed): ');
     }
     let salt = crypto.createHash('sha256').update(passphrase).digest();
     let key = crypto.scryptSync(passphrase, salt, ALGORITHM_KEY_SIZE);
@@ -90,16 +91,24 @@ function _encrypt(dataStr) {
  * @param {Buffer} dataBuf binary buffer to decrypt
  * @returns {string} decrypted text string
  */
-function _decrypt(dataBuf) {
+function _decrypt(dataBuf, trial = 0) {
+    if (trial > PASSPHRASE_TRIAL_LIMIT) {
+        throw new Error('Maximum passphrase trial reached.');
+    }
     _prepareActiveKey();
     let nonce = dataBuf.subarray(0, ALGORITHM_NONCE_SIZE);
-    let decipher = crypto.createDecipheriv(ALGORITHM_NAME, ACTIVE_KEY, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
     let cipherText = dataBuf.subarray(ALGORITHM_NONCE_SIZE, dataBuf.length - ALGORITHM_TAG_SIZE);
-
     let authTag = dataBuf.subarray(cipherText.length + ALGORITHM_NONCE_SIZE);
-    decipher.setAuthTag(authTag);
 
-    return decipher.update(cipherText, null, 'utf8') + decipher.final('utf8');
+    try {
+        let decipher = crypto.createDecipheriv(ALGORITHM_NAME, ACTIVE_KEY, nonce, { authTagLength: ALGORITHM_TAG_SIZE }).setAuthTag(authTag);
+        return decipher.update(cipherText, null, 'utf8') + decipher.final('utf8');
+    } catch (err) {
+        // fail to decrypt, reset active key
+        ACTIVE_KEY = undefined;
+        sleep(trial * 2);
+        return _decrypt(dataBuf, trial + 1);
+    }
 }
 
 exports.setKey = _setActiveKey;
