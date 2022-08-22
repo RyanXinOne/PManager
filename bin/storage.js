@@ -16,17 +16,23 @@ function _response(success, message = null, data = null) {
 }
 
 /**
- * Initialise data storage if non-existent.
+ * Ask user passphrase and set up encryption key.
+ */
+function _setPassphraseByAsking() {
+    let passphrase, passphrase2;
+    do {
+        passphrase = askSecret('Set passphrase (not displayed): ');
+        passphrase2 = askSecret('Confirm passphrase (not displayed): ');
+    } while (passphrase !== passphrase2);
+    enc.setKey(passphrase);
+}
+
+/**
+ * Initialise data storage if non-existent. Set up initial user passphrase.
  */
 function _setUpDataStorage() {
     if (!fs.existsSync(config.fileStoragePath)) {
-        // ask user passphrase
-        let passphrase, passphrase2;
-        do {
-            passphrase = askSecret('Set passphrase (not displayed): ');
-            passphrase2 = askSecret('Confirm passphrase (not displayed): ');
-        } while (passphrase !== passphrase2);
-        enc.setKey(passphrase);
+        _setPassphraseByAsking();
 
         // write initial data
         const iniData = {
@@ -486,6 +492,20 @@ function _export(filePath) {
     return _response(true);
 }
 
+/**
+ * Reset user passphrase.
+ */
+function _resetPassphrase() {
+    let data = _readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    _setPassphraseByAsking();
+    return _writeData(data);
+}
+
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
@@ -493,3 +513,4 @@ exports.search = _search;
 exports.move = _move;
 exports.import = _import;
 exports.export = _export;
+exports.resetPassphrase = _resetPassphrase;

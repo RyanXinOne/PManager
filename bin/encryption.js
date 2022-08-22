@@ -31,7 +31,12 @@ function _flushKeyCache(passphrase = undefined) {
     }
     let salt = crypto.createHash('sha256').update(passphrase).digest();
     let key = crypto.scryptSync(passphrase, salt, ALGORITHM_KEY_SIZE);
-    fs.writeFileSync(KEY_CACHE_PATH, key);
+    try {
+        fs.writeFileSync(KEY_CACHE_PATH, key);
+    } catch (err) {
+        console.error("Failed to write to key cache file: %s", res.message);
+        process.exit(0);
+    }
 }
 
 /**
@@ -56,7 +61,12 @@ function _prepareActiveKey() {
             _flushKeyCache();
         }
     }
-    ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+    try {
+        ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+    } catch (err) {
+        console.error("Failed to read key cache file: %s", err.message);
+        process.exit(0);
+    }
 }
 
 /**
@@ -67,7 +77,12 @@ function _prepareActiveKey() {
  */
 function _setActiveKey(passphrase) {
     _flushKeyCache(passphrase);
-    ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+    try {
+        ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+    } catch (err) {
+        console.error("Failed to read key cache file: %s", err.message);
+        process.exit(0);
+    }
 }
 
 /**
@@ -95,6 +110,7 @@ function _decrypt(dataBuf, trial = 0) {
     if (trial > PASSPHRASE_TRIAL_LIMIT) {
         throw new Error('Maximum passphrase trial reached.');
     }
+
     _prepareActiveKey();
     let nonce = dataBuf.subarray(0, ALGORITHM_NONCE_SIZE);
     let cipherText = dataBuf.subarray(ALGORITHM_NONCE_SIZE, dataBuf.length - ALGORITHM_TAG_SIZE);

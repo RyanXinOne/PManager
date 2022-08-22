@@ -25,7 +25,7 @@ function parseIndex(indexIn) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['help', 'version', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export'],
+        boolean: ['help', 'version', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export', 'reset-passphrase'],
         alias: { 'help': 'h', 'version': 'v', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'index': 'n', 'force': 'f' },
         default: { 'n': 0, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
@@ -50,6 +50,7 @@ Usage:
     pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
+    pm --reset-passphrase
     pm --help|--version
 
 Options:
@@ -66,17 +67,26 @@ Options:
     --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
     --import                   Import data from an external file.
     --export                   Export data to an external file.
+    --reset-passphrase         Reset encryption passphrase.
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
+PManager helps manage your secret information efficiently. Your private data is encrypted and stored securely. To access data, please set up and keep in mind your own passphrase.
+
+"pm" command works under different modes by provided flags. If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
         );
     } else if (args.version) {
         // version number
         let package = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
         print(package.version);
     } else {
-        if (args.search) {
+        if (args['reset-passphrase']) {
+            // reset passphrase
+            let res = storage.resetPassphrase();
+            if (!res.success) {
+                print(res.message);
+            }
+        } else if (args.search) {
             // search
             if (args._.length === 0) {
                 print('Search texts cannot be missing.\nUse --help for more information.');
