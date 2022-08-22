@@ -11,33 +11,55 @@ const pmDataFolder = process.env.PMENV === 'dev' ?
     path.join(__dirname, '..', 'pmdata') :
     path.join(sysAppDataFolder, 'pmanager');
 
-const defaultConfig = {
-    fileStoragePath: path.join(pmDataFolder, 'PMDATA'),
-    doNotAskPassphraseInSec: 300
-};
-
-// initialise config file if non-existent
-const configPath = path.join(pmDataFolder, 'config.json');
-if (!fs.existsSync(configPath)) {
-    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+function _writeConfig(config) {
     try {
-        let configText = JSON.stringify({ description: "Here are pmanager user configurations." }, null, 2);
-        fs.writeFileSync(configPath, configText, 'utf8');
+        let configText = JSON.stringify(config, null, 2);
+        fs.writeFileSync(_configPath, configText, 'utf8');
     } catch (err) {
-        console.error("Failed to initialise config file: %s", res.message);
+        console.error("Failed to write to user config file: %s", res.message);
         process.exit(0);
     }
 }
 
-// read config file
-let config;
+// initialise user config file if non-existent
+const _configPath = path.join(pmDataFolder, 'config.json');
+if (!fs.existsSync(_configPath)) {
+    fs.mkdirSync(path.dirname(_configPath), { recursive: true });
+    _writeConfig({});
+}
+
+// built-in default config
+const _defaultConfig = {
+    fileStoragePath: path.join(pmDataFolder, 'PMDATA'),
+    doNotAskPassphraseInSec: "300"
+};
+
+// read user config
+let _userConfig;
 try {
-    let configText = fs.readFileSync(configPath, 'utf8');
-    let userConfig = JSON.parse(configText);
-    config = { ...defaultConfig, ...userConfig };
+    _userConfig = fs.readFileSync(_configPath, 'utf8');
+    _userConfig = JSON.parse(_userConfig);
 } catch (err) {
-    console.error("Failed to read or parse config file: %s", err.message);
+    console.error("Failed to read or parse user config file: %s", err.message);
     process.exit(0);
 }
 
-module.exports = config;
+// merge configs
+let _config = { ..._defaultConfig, ..._userConfig };
+
+/**
+ * Update user config file by key and value specified.
+ * Unset a key by passing empty value.
+ */
+function _updateUserConfigValue(key, value) {
+    if (value === undefined || value === "") {
+        delete _userConfig[key];
+    } else {
+        _userConfig[key] = value;
+    }
+    _writeConfig(_userConfig);
+}
+
+exports.configPath = _configPath;
+exports.config = _config;
+exports.updateConfig = _updateUserConfigValue;

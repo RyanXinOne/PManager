@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 const crypto = require('crypto');
-const config = require('./config.js');
+const { config } = require('./config.js');
 const { sleep, askSecret } = require('./utils.js');
 
 

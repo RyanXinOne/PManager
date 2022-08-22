@@ -2,6 +2,7 @@
 
 const minimist = require('minimist');
 const fs = require('fs');
+const config = require('./config.js');
 const storage = require('./storage.js');
 
 
@@ -25,9 +26,9 @@ function parseIndex(indexIn) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['help', 'version', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'move', 'fuzzy', 'parse-flag', 'import', 'export', 'reset-passphrase'],
-        alias: { 'help': 'h', 'version': 'v', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'index': 'n', 'force': 'f' },
-        default: { 'n': 0, 'fuzzy': true, 'parse-flag': true },
+        boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'help', 'version'],
+        alias: { 'index': 'n', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
+        default: { 'index': 0, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
     };
     let argRaw = process.argv.slice(2);
@@ -51,6 +52,7 @@ Usage:
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
     pm --import|--export <file path>
     pm --reset-passphrase
+    pm --config [<config key>] [<config value>]
     pm --help|--version
 
 Options:
@@ -68,6 +70,7 @@ Options:
     --import                   Import data from an external file.
     --export                   Export data to an external file.
     --reset-passphrase         Reset encryption passphrase.
+    --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
@@ -79,6 +82,15 @@ PManager helps manage your secret information efficiently. Your private data is 
         // version number
         let package = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
         print(package.version);
+    } else if (args.config) {
+        // list/update configs
+        if (args._.length > 0) {
+            config.updateConfig(args._[0], args._[1]);
+        } else {
+            print(`User configuration file path: "${config.configPath}"`);
+            print(config.config);
+        }
+
     } else {
         if (args['reset-passphrase']) {
             // reset passphrase

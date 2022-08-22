@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const config = require('./config.js');
+const { config } = require('./config.js');
 const enc = require('./encryption.js');
 const { askSecret } = require('./utils.js');
 
