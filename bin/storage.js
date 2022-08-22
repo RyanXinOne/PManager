@@ -68,7 +68,6 @@ function _readData() {
 }
 
 function _writeData(data) {
-    _setUpDataStorage();
     try {
         data = JSON.stringify(data);
         let dataBuf = enc.encrypt(data);
@@ -429,6 +428,8 @@ function _move(scope1, index1, scope2, index2) {
  * @param {string} filePath path to JSON file
  */
 function _import(filePath) {
+    // read data to authenticate before proceeding
+    _readData();
     let data;
     // read json data from file
     try {
