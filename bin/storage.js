@@ -256,7 +256,7 @@ function _updateDoc(keyChain, value, document, create, force) {
 }
 
 /**
- * Delete document or sentence by key chain specified. Scope would be deleted automatically if there is no document in it.
+ * Delete sentence or empty object by key chain specified. Empty document and scope would be cleaned automatically.
  * 
  * @param {string} scope scope name
  * @param {Integer} index index of document to be deleted from the scope
@@ -276,27 +276,20 @@ function _delete(scope, index, keyChain, force = false) {
         return _response(false, `Scope "${scope}" or index ${index} does not exist.`);
     }
     document = document[scope];
-    if (keyChain.length === 0) {
-        // force to delete document
-        if (force) {
-            document.splice(index, 1);
-            // clean scope
-            if (document.length === 0) {
-                delete data[scope];
-            }
-            return _writeData(data);
-        } else {
+    if (keyChain.length > 0) {
+        let res = _deleteDoc(keyChain, document[index], force);
+        if (!res.success) {
+            return res;
+        }
+    } else {
+        if (!force) {
             return _response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
         }
     }
-    let res = _deleteDoc(keyChain, document[index], force);
-    if (!res.success) {
-        return res;
-    }
-    // clean document if no sentence left
-    if (Object.keys(document[index]).length === 0) {
+    // clean empty document or force to delete
+    if (Object.keys(document[index]).length === 0 || force) {
         document.splice(index, 1);
-        // clean scope
+        // clean empty scope
         if (document.length === 0) {
             delete data[scope];
         }
@@ -319,11 +312,11 @@ function _deleteDoc(keyChain, document, force) {
     if (!(keyChain[i] in obj)) {
         return _response(false, `Key "${keyChain.join('.')}" does not exist.`);
     }
-    // check object
-    if (typeof obj[keyChain[i]] === 'object' && !force) {
-        return _response(false, `Not allowed to delete object under "${keyChain.join('.')}".`);
+    // check non-empty object
+    if (typeof obj[keyChain[i]] === 'object' && Object.keys(obj[keyChain[i]]).length > 0 && !force) {
+        return _response(false, `Not allowed to delete non-empty object under "${keyChain.join('.')}".`);
     }
-    // delete sentence by sentence key
+    // delete sentence or empty object
     delete obj[keyChain[i]];
     return _response(true);
 }
