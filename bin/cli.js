@@ -17,7 +17,7 @@ function print(obj) {
 function parseIndex(indexIn) {
     let index = parseInt(indexIn);
     if (isNaN(index)) {
-        print('Index can only be number or "all".\nUse --help for more information.');
+        print('Index can only be a number.\nUse --help for more information.');
         process.exit(0);
     }
     return index;
@@ -26,7 +26,7 @@ function parseIndex(indexIn) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'help', 'version'],
+        boolean: ['A', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'help', 'version'],
         alias: { 'index': 'n', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
         default: { 'index': 0, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
@@ -57,7 +57,8 @@ Usage:
 
 Options:
     -n <index>                 Index of document under the <scope>. Under query mode, string value "all" is allowed to fetch all. Under create mode, a new document would be created if index is out of range. Default: 0
-    --index=<index>            Same as -n <index>.
+    --index=<index>            Same as "-n <index>".
+    -A                         Alias to "-n all".
     -s, --search               Search mode. Search scope(s) that contains object/sentence key by texts specified. All positional arguments are treated as a single string separated by white space. Fuzzy matching is enabled by default.
     -e, -m, --edit             Edit mode. Modify existing sentence in a document by specified <key chain> and <value>.
     -i, --insert               Insert a new document into <index> specified instead of editing existing one. If specified, flag 'create' would be treated as true anyway.
@@ -137,6 +138,9 @@ PManager helps manage your secret information efficiently. Your private data is 
             let scope = args._[0];
             if (scope === "*") {
                 scope = '';
+            }
+            if (args.A) {
+                args.index = 'all';
             }
             let index;
 
