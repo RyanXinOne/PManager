@@ -13,7 +13,11 @@ function _sleep(sec) {
  */
 function _askSecret(query) {
     const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
-    return readlineSync.question(query, readlineOptions);
+    let secret = readlineSync.question('[cancel? c] ' + query, readlineOptions);
+    if (secret === 'c') {
+        process.exit(1);
+    }
+    return secret;
 }
 
 exports.sleep = _sleep;
