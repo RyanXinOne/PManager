@@ -4,15 +4,8 @@ const minimist = require('minimist');
 const fs = require('fs');
 const config = require('./config.js');
 const storage = require('./storage.js');
+const { print } = require('./utils.js');
 
-
-function print(obj) {
-    if (typeof obj === 'object') {
-        console.log(JSON.stringify(obj, null, 2));
-    } else {
-        console.log(obj);
-    }
-}
 
 function parseIndex(indexIn) {
     let index = parseInt(indexIn);
@@ -50,7 +43,7 @@ Usage:
     pm -s <text>...
     pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
-    pm --import|--export <file path>
+    pm --import|--export [<file path>]
     pm --reset-passphrase
     pm --config [<config key>] [<config value>]
     pm --help|--version
@@ -68,8 +61,8 @@ Options:
     --no-fuzzy                 Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
     --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
-    --import                   Import data from an external file.
-    --export                   Export data to an external file.
+    --import                   Import data from file. If <file path> is omitted, read from stdin.
+    --export                   Export data to file. If <file path> is omitted, write to stdout.
     --reset-passphrase         Reset encryption passphrase.
     --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.
@@ -115,11 +108,7 @@ PManager helps manage your secret information efficiently. Your private data is 
             }
         } else if (args.import || args.export) {
             // import/export data
-            if (args._.length === 0) {
-                print('File path cannot be missing.\nUse --help for more information.');
-                process.exit(0);
-            }
-            let filePath = args._[0];
+            let filePath = args._.length === 0 ? null : args._[0];
             let res;
             if (args.import) {
                 res = storage.import(filePath);

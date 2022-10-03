@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const { config } = require('./config.js');
 const enc = require('./encryption.js');
-const { askSecret } = require('./utils.js');
+const { print, readLines, askSecret } = require('./utils.js');
 
 
 fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
@@ -427,31 +427,36 @@ function _move(scope1, index1, scope2, index2) {
 }
 
 /**
- * Import data from JSON file. JSON structure is checked to ensure compliance.
+ * Import data from JSON file or stdin. JSON structure is checked to ensure compliance.
  * 
- * @param {string} filePath path to JSON file
+ * @param {string} filePath optional, path to JSON file
  */
-function _import(filePath) {
+function _import(filePath = null) {
     // read data to authenticate before proceeding
     _readData();
     let data;
-    // read json data from file
     try {
-        data = fs.readFileSync(filePath, 'utf8');
+        if (filePath !== null) {
+            // read json data from file
+            data = fs.readFileSync(filePath, 'utf8');
+        } else {
+            // read json data from stdin
+            data = readLines();
+        }
         data = JSON.parse(data);
     } catch (err) {
         return _response(false, err.message);
     }
     // check json structure
     if (Object.prototype.toString.call(data) !== Object.prototype.toString.call({})) {
-        return _response(false, 'Non-compliant file input.');
+        return _response(false, 'Non-compliant data input.');
     }
     // a helper function
     let consistsOfObjectsOnly = (obj) => {
         let queue = [obj];
         while (queue.length > 0) {
             let obj = queue.shift();
-            if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({})) {
+            if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({}) || Object.keys(obj).length === 0) {
                 return false;
             }
             for (const key in obj) {
@@ -464,12 +469,12 @@ function _import(filePath) {
     };
     for (const scope in data) {
         let documents = data[scope];
-        if (!Array.isArray(documents)) {
-            return _response(false, 'Non-compliant file input.');
+        if (!Array.isArray(documents) || documents.length === 0) {
+            return _response(false, 'Non-compliant data input.');
         }
         for (let i = 0; i < documents.length; i++) {
             if (!consistsOfObjectsOnly(documents[i])) {
-                return _response(false, 'Non-compliant file input.');
+                return _response(false, 'Non-compliant data input.');
             }
         }
     }
@@ -477,23 +482,28 @@ function _import(filePath) {
 }
 
 /**
- * Export data to JSON file.
+ * Export data to JSON file or stdout.
  * 
- * @param {string} filePath path to JSON file
+ * @param {string} filePath optional, path to JSON file
  */
-function _export(filePath) {
+function _export(filePath = null) {
     let data = _readData();
     if (data.success) {
         data = data.data;
     } else {
         return data;
     }
-    // write json data to file
-    try {
-        data = JSON.stringify(data, null, 2);
-        fs.writeFileSync(filePath, data, 'utf8');
-    } catch (err) {
-        return _response(false, err.message);
+    data = JSON.stringify(data, null, 2);
+    if (filePath !== null) {
+        // write json data to file
+        try {
+            fs.writeFileSync(filePath, data, 'utf8');
+        } catch (err) {
+            return _response(false, err.message);
+        }
+    } else {
+        // write json data to stdout
+        print(data);
     }
     return _response(true);
 }
