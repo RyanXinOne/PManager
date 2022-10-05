@@ -456,7 +456,7 @@ function _import(filePath = null) {
         let queue = [obj];
         while (queue.length > 0) {
             let obj = queue.shift();
-            if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({}) || Object.keys(obj).length === 0) {
+            if (Object.prototype.toString.call(obj) !== Object.prototype.toString.call({})) {
                 return false;
             }
             for (const key in obj) {
@@ -469,10 +469,16 @@ function _import(filePath = null) {
     };
     for (const scope in data) {
         let documents = data[scope];
+        // check non-empty scope
         if (!Array.isArray(documents) || documents.length === 0) {
             return _response(false, 'Non-compliant data input.');
         }
         for (let i = 0; i < documents.length; i++) {
+            // check non-empty document
+            if (Object.prototype.toString.call(documents[i]) !== Object.prototype.toString.call({}) || Object.keys(documents[i]).length === 0) {
+                return _response(false, 'Non-compliant data input.');
+            }
+            // check objects
             if (!consistsOfObjectsOnly(documents[i])) {
                 return _response(false, 'Non-compliant data input.');
             }
