@@ -19,7 +19,7 @@ function parseIndex(indexIn) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['A', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'help', 'version'],
+        boolean: ['A', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'help', 'version'],
         alias: { 'index': 'n', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
         default: { 'index': 0, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
@@ -29,6 +29,12 @@ function parseArgs() {
     if (!args['parse-flag']) {
         argOpts.stopEarly = true;
         args = minimist(argRaw, argOpts);
+    }
+    if (args.A) {
+        args.index = 'all';
+    }
+    if (args.U) {
+        args.fuzzy = false;
     }
     return args;
 }
@@ -58,7 +64,7 @@ Options:
     -c, --create               Create mode. Create new object and sentence if any key in <key chain> does not exist.
     -d, --delete               Delete mode. Delete a sentence by <key chain> specified. Empty document and scope would be cleaned automatically.
     -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is a document or non-empty object.
-    --no-fuzzy                 Disable fuzzy matching under query or search mode.
+    -U, --no-fuzzy             Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
     --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
     --import                   Import data from file. If <file path> is omitted, read from stdin.
@@ -127,9 +133,6 @@ PManager helps manage your secret information efficiently. Your private data is 
             let scope = args._[0];
             if (scope === "*") {
                 scope = '';
-            }
-            if (args.A) {
-                args.index = 'all';
             }
             let index;
 
