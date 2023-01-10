@@ -127,7 +127,7 @@ function _decrypt(dataBuf, trial = 0) {
     } catch (err) {
         // fail to decrypt, reset active key
         ACTIVE_KEY = undefined;
-        sleep(trial * 2);
+        sleep(trial * 0.5);
         return _decrypt(dataBuf, trial + 1);
     }
 }
