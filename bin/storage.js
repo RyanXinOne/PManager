@@ -126,9 +126,10 @@ function _get(scope, index, keyChain, noFuzzy = false) {
         if (document[index] === undefined) {
             return _response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
         }
+        let size = document.length;
         document = document[index];
         let res = _queryDoc(keyChain, document);
-        return res.success ? _response(true, `Scope: "${scopes[0]}"`, res.data) : res;
+        return res.success ? _response(true, `Scope: "${scopes[0]}"` + (size > 1 ? `, document ${index} (${size} in total)` : ''), res.data) : res;
     }
 }
 
