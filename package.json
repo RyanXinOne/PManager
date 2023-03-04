@@ -10,7 +10,6 @@
   ],
   "homepage": "https://github.com/RyanXinOne/PManager",
   "author": "Ryan Xin",
-  "private": true,
   "bin": {
     "pm": "./bin/cli.js"
   },
