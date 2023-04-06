@@ -7,7 +7,27 @@ const storage = require('./storage.js');
 const { print } = require('./utils.js');
 
 
-function parseIndex(indexIn) {
+function parseScope(scopeIn, allowWildcard = false) {
+    scopeIn = scopeIn.trim();
+    if (scopeIn === '*') {
+        if (allowWildcard) {
+            return '';
+        } else {
+            print('Scope name cannot be "*".\nUse --help for more information.');
+            process.exit(0);
+        }
+    }
+    if (scopeIn === '') {
+        print('Scope name cannot be empty.\nUse --help for more information.');
+        process.exit(0);
+    }
+    return scopeIn;
+}
+
+function parseIndex(indexIn, allowAll = false) {
+    if (allowAll && indexIn === 'all') {
+        return indexIn;
+    }
     let index = parseInt(indexIn);
     if (isNaN(index)) {
         print('Index can only be a number.\nUse --help for more information.');
@@ -39,16 +59,17 @@ function parseArgs() {
     return args;
 }
 
-function run(args) {
+function run() {
+    const args = parseArgs();
     if (args.help) {
         // help message
-        print(`Your one-stop privacy manager.
+        print(`PManager helps manage your secret information efficiently. Your private data is encrypted and stored securely. To access data, please set up and keep in mind your own passphrase.
 
 Usage:
     pm [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
     pm -s <text>...
     pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
-    pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
+    pm --move [--no-parse-flag] <source scope> [<source index>] <target scope> [<target index>]
     pm --import|--export [<file path>]
     pm --reset-passphrase
     pm --config [<config key>] [<config value>]
@@ -66,15 +87,13 @@ Options:
     -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is a document or non-empty object.
     -U, --no-fuzzy             Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
-    --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
+    --move                     If <source index> and <target index> is given, move a document from one index position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically. If <source index> and <target index> is not given, <source scope> is renamed into <target scope>.
     --import                   Import data from file. If <file path> is omitted, read from stdin.
     --export                   Export data to file. If <file path> is omitted, write to stdout.
     --reset-passphrase         Reset encryption passphrase.
     --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.
     -v, --version              Print version number.
-
-PManager helps manage your secret information efficiently. Your private data is encrypted and stored securely. To access data, please set up and keep in mind your own passphrase.
 
 "pm" command works under different modes by provided flags. If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.`
         );
@@ -124,60 +143,61 @@ PManager helps manage your secret information efficiently. Your private data is 
             if (!res.success) {
                 print(res.message);
             }
+        } else if (args.move) {
+            // move a document or rename a scope
+            if (args._.length === 2) {
+                // rename scope
+                let scope1 = parseScope(args._[0]);
+                let scope2 = parseScope(args._[1]);
+                let res = storage.rename(scope1, scope2);
+                if (!res.success) {
+                    print(res.message);
+                }
+            } else if (args._.length === 4) {
+                // move document
+                let scope1 = parseScope(args._[0]);
+                let index1 = parseIndex(args._[1]);
+                let scope2 = parseScope(args._[2]);
+                let index2 = parseIndex(args._[3]);
+                let res = storage.move(scope1, index1, scope2, index2);
+                if (!res.success) {
+                    print(res.message);
+                }
+            } else {
+                print('Invalid number of arguments.\nUse --help for more information.');
+                process.exit(0);
+            }
         } else {
-            // pre-extraction
+            // check scope
             if (args._.length === 0) {
                 print('Scope name cannot be missing.\nUse --help for more information.');
                 process.exit(0);
             }
-            let scope = args._[0];
-            if (scope === "*") {
-                scope = '';
+            // parse scope and index
+            let scope, index;
+            if (args.edit || args.insert || args.create || args.delete) {
+                scope = parseScope(args._[0]);
+                index = parseIndex(args.index);
+            } else {
+                scope = parseScope(args._[0], true);
+                index = parseIndex(args.index, true);
             }
-            let index;
 
+            // business operation
             if (args.edit || args.insert || args.create) {
                 // set
-                index = parseIndex(args.index);
                 let res = storage.set(scope, index, args._.slice(1, args._.length - 1), args._[args._.length - 1], args.insert, args.create, args.force);
                 if (!res.success) {
                     print(res.message);
                 }
             } else if (args.delete) {
                 // delete
-                index = parseIndex(args.index);
                 let res = storage.delete(scope, index, args._.slice(1), args.force);
-                if (!res.success) {
-                    print(res.message);
-                }
-            } else if (args.move) {
-                // move
-                index = parseIndex(args.index);
-                let scope1 = scope;
-                let index1 = index;
-                let scope2, index2;
-                if (args._.length === 3) {
-                    scope2 = scope1;
-                    index2 = parseInt(args._[2]);
-                } else {
-                    scope2 = args._[2];
-                    index2 = parseInt(args._[3]);
-                }
-                if (scope2 === undefined || isNaN(index2)) {
-                    print('Invalid arguments.\nUse --help for more information.');
-                    process.exit(0);
-                }
-                let res = storage.move(scope1, index1, scope2, index2);
                 if (!res.success) {
                     print(res.message);
                 }
             } else {
                 // query
-                if (args.index === 'all') {
-                    index = args.index;
-                } else {
-                    index = parseIndex(args.index);
-                }
                 let res = storage.get(scope, index, args._.slice(1), !args.fuzzy);
                 if (res.success) {
                     print(res.message);
@@ -190,4 +210,4 @@ PManager helps manage your secret information efficiently. Your private data is 
     }
 }
 
-run(parseArgs());
+run();

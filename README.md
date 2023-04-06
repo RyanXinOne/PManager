@@ -1,12 +1,16 @@
 # PManager
+
+A command line private information manager.
+
 ```
-Your one-stop privacy manager.
+PManager helps manage your secret information efficiently. Your private data is encrypted and stored securely. To access data, please set up and keep in mind your own passphrase.
 
 Usage:
     pm [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
     pm -s <text>...
     pm -e[f]|-m[f]|-i|-c|-d[f] [--no-parse-flag] <scope> [-n <index>] [<key chain>...] [<value>]
     pm --move [--no-parse-flag] <source scope> <source index> <target scope> <target index>
+    pm --move [--no-parse-flag] <source scope> <target scope>
     pm --import|--export [<file path>]
     pm --reset-passphrase
     pm --config [<config key>] [<config value>]
@@ -24,15 +28,13 @@ Options:
     -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is a document or non-empty object.
     -U, --no-fuzzy             Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
-    --move                     Move a document from one position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically.
+    --move                     If <source index> and <target index> is given, move a document from one index position to another. <target scope> would be created if it does not exist. Source document would be deleted first and then be inserted into <target index> under <target scope>. Empty scope would be cleaned automatically. If <source index> and <target index> is not given, <source scope> is renamed into <target scope>.
     --import                   Import data from file. If <file path> is omitted, read from stdin.
     --export                   Export data to file. If <file path> is omitted, write to stdout.
     --reset-passphrase         Reset encryption passphrase.
     --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.
     -v, --version              Print version number.
-
-PManager helps manage your secret information efficiently. Your private data is encrypted and stored securely. To access data, please set up and keep in mind your own passphrase.
 
 "pm" command works under different modes by provided flags. If no flag is specified, pm is under query mode by default. It would fetch object or sentence value by specified <key chain> in the first document under the provided <scope>. <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents which are distinguished by <index> value. A <document> contains nested objects and sentences which are key-value pairs with <value> being string that can be queried by <key chain>. <key chain> is a list of keys that are separated by white space.
 ```

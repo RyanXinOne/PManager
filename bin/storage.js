@@ -388,6 +388,34 @@ function _searchObj(obj, text, noFuzzy) {
 }
 
 /**
+ * Rename a scope. The source scope must exist and the target scope must not exist.
+ * 
+ * @param {string} scope1 source scope name
+ * @param {string} scope2 target scope name
+ */
+function _rename(scope1, scope2) {
+    let data = _readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    // check existence of source scope
+    if (data[scope1] === undefined) {
+        return _response(false, `Source scope "${scope1}" does not exist.`);
+    }
+    // check existence of target scope
+    if (data[scope2] !== undefined) {
+        return _response(false, `Target scope "${scope2}" already exists.`);
+    }
+    // rename scope
+    let document = data[scope1];
+    delete data[scope1];
+    data[scope2] = document;
+    return _writeData(data);
+}
+
+/**
  * Move a document from one position to another. Target scope would be created if it does not exist. Source document would be deleted first and then be inserted into target index under target scope. Empty scope would be deleted automatically.
  * 
  * @param {string} scope1 source scope name
@@ -533,6 +561,7 @@ exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
 exports.search = _search;
+exports.rename = _rename;
 exports.move = _move;
 exports.import = _import;
 exports.export = _export;

@@ -1,7 +1,7 @@
 {
   "name": "pmanager",
   "version": "0.2.6",
-  "description": "Your one-stop privacy manager.",
+  "description": "A command line private information manager.",
   "keywords": [
     "privacy",
     "passwords",
@@ -14,7 +14,7 @@
     "pm": "./bin/cli.js"
   },
   "scripts": {
-    "cli-test": "set PMENV=dev&& npx pm *"
+    "cli-test": "npx pm --help"
   },
   "dependencies": {
     "minimist": "^1.2.0",
