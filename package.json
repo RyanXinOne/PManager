@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.2.7",
+  "version": "0.2.8",
   "description": "A command line private information manager.",
   "keywords": [
     "privacy",
@@ -18,7 +18,8 @@
   },
   "dependencies": {
     "minimist": "^1.2.0",
-    "readline-sync": "^1.4.10"
+    "readline-sync": "^1.4.10",
+    "sync-request": "^6.1.0"
   },
   "devDependencies": {
     "pmanager": "file:./"

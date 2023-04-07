@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const request = require('sync-request');
 const { config } = require('./config.js');
 const enc = require('./encryption.js');
 const { print, readLines, askSecret } = require('./utils.js');
@@ -456,21 +457,24 @@ function _move(scope1, index1, scope2, index2) {
 }
 
 /**
- * Import data from JSON file or stdin. JSON structure is checked to ensure compliance.
+ * Import data from web URL, local JSON file or stdin. JSON structure is checked to ensure compliance.
  * 
- * @param {string} filePath optional, path to JSON file
+ * @param {string} url optional, web url or path to JSON file
  */
-function _import(filePath = null) {
+function _import(url = null) {
     // read data to authenticate before proceeding
     _readData();
     let data;
     try {
-        if (filePath !== null) {
-            // read json data from file
-            data = fs.readFileSync(filePath, 'utf8');
-        } else {
+        if (url === null) {
             // read json data from stdin
             data = readLines();
+        } else if (url.startsWith('http://') || url.startsWith('https://')) {
+            // fetch json data from web
+            data = request('GET', url).getBody('utf8');
+        } else {
+            // read json data from file
+            data = fs.readFileSync(url, 'utf8');
         }
         data = JSON.parse(data);
     } catch (err) {
