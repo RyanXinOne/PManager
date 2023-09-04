@@ -12,6 +12,7 @@ Usage:
     pm --move [--no-parse-flag] <source scope> [<source index>] <target scope> [<target index>]
     pm --import [<file path>|<url>]
     pm --export [<file path>]
+    pm --hashcode
     pm --reset-passphrase
     pm --config [<config key>] [<config value>]
     pm --help|--version
@@ -31,6 +32,7 @@ Options:
     --move                     If <source index> and <target index> are given, move a document from one index position to another. <target scope> would be created if it does not exist. The source document would be deleted first and then inserted into <target index> under <target scope>. An empty scope would be cleaned automatically. If <source index> and <target index> are not given, <source scope> is renamed into <target scope>.
     --import                   Import data from local file or web source. If <file path> or <url> is omitted, read from standard input.
     --export                   Export data to a file. If <file path> is omitted, write to standard output.
+    --hashcode                 Print hash code of data.
     --reset-passphrase         Reset encryption passphrase.
     --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.

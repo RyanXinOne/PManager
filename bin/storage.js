@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const { config } = require('./config.js');
 const enc = require('./encryption.js');
 const { print, readLines, askSecret } = require('./utils.js');
@@ -561,6 +562,20 @@ function _resetPassphrase() {
     return _writeData(data);
 }
 
+/**
+ * Generate hashcode of data.
+ */
+function _hashcode() {
+    let data = _readData();
+    if (data.success) {
+        data = data.data;
+    } else {
+        return data;
+    }
+    let hash = crypto.createHash('sha256').update(JSON.stringify(data)).digest('hex');
+    return _response(true, null, hash);
+}
+
 exports.get = _get;
 exports.set = _set;
 exports.delete = _delete;
@@ -570,3 +585,4 @@ exports.move = _move;
 exports.import = _import;
 exports.export = _export;
 exports.resetPassphrase = _resetPassphrase;
+exports.hashcode = _hashcode;

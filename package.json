@@ -1,6 +1,6 @@
 {
   "name": "pmanager",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "A command line private information manager.",
   "keywords": [
     "privacy",
