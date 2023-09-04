@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const request = require('sync-request');
 const { config } = require('./config.js');
 const enc = require('./encryption.js');
 const { print, readLines, askSecret } = require('./utils.js');
@@ -471,6 +470,7 @@ function _import(url = null) {
             data = readLines();
         } else if (url.startsWith('http://') || url.startsWith('https://')) {
             // fetch json data from web
+            const request = require('sync-request');
             data = request('GET', url).getBody('utf8');
         } else {
             // read json data from file
