@@ -324,8 +324,7 @@ function _deleteDoc(keyChain, document, force) {
 }
 
 /**
- * Search scopes that contain object/sentence keys by text specified where fuzzy
- * matching is enabled.
+ * Search for scopes that contain object/sentence key-values by text specified.
  * 
  * @param {string} text text to be matched
  * @param {boolean} noFuzzy whether to disable fuzzy matching
@@ -365,17 +364,28 @@ function _search(text, noFuzzy = false) {
 }
 
 function _searchObj(obj, text, noFuzzy) {
-    // iterate over keys of object
+    // iterate over object
     for (const key in obj) {
         // match object/sentence key
         if (!noFuzzy) {
-            let lowerKey = key.toLowerCase();
-            if (lowerKey.indexOf(text) > -1) {
+            if (key.toLowerCase().indexOf(text) > -1) {
                 return true;
             }
         } else {
             if (key === text) {
                 return true;
+            }
+        }
+        // match sentence value
+        if (typeof obj[key] === 'string') {
+            if (!noFuzzy) {
+                if (obj[key].toLowerCase().indexOf(text) > -1) {
+                    return true;
+                }
+            } else {
+                if (obj[key] === text) {
+                    return true;
+                }
             }
         }
         // recurse into nested object
