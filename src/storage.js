@@ -1,9 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const crypto = require('crypto');
-const { config } = require('./config.js');
-const enc = require('./encryption.js');
-const { print, readLines, askSecret } = require('./utils.js');
+import path from 'path';
+import fs from 'fs';
+import crypto from 'crypto';
+import { print, readLines, askSecret } from './utils.js';
+import { config } from './config.js';
+import { setKey, encrypt, decrypt } from './encryption.js';
 
 
 fs.mkdirSync(path.dirname(config.fileStoragePath), { recursive: true });
@@ -25,7 +25,7 @@ function _setPassphraseByAsking() {
         passphrase = askSecret('Set passphrase (not displayed): ');
         passphrase2 = askSecret('Confirm passphrase (not displayed): ');
     } while (passphrase !== passphrase2);
-    enc.setKey(passphrase);
+    setKey(passphrase);
 }
 
 /**
@@ -60,7 +60,7 @@ function _readData() {
     let data;
     try {
         let dataBuf = fs.readFileSync(config.fileStoragePath);
-        data = enc.decrypt(dataBuf);
+        data = decrypt(dataBuf);
         data = JSON.parse(data);
     } catch (err) {
         return _response(false, err.message);
@@ -71,7 +71,7 @@ function _readData() {
 function _writeData(data) {
     try {
         data = JSON.stringify(data);
-        let dataBuf = enc.encrypt(data);
+        let dataBuf = encrypt(data);
         fs.writeFileSync(config.fileStoragePath, dataBuf);
     } catch (err) {
         return _response(false, err.message);
@@ -87,7 +87,7 @@ function _writeData(data) {
  * @param {Array.<string>} keyChain key chain of document
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
-function _get(scope, index, keyChain, noFuzzy = false) {
+function get(scope, index, keyChain, noFuzzy = false) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -180,7 +180,7 @@ function _queryDoc(keyChain, document) {
  * @param {boolean} create create new object and sentence if any of them in key chain does not exist
  * @param {boolean} force force to overwrite even if any key in key chain points to an existing object
  */
-function _set(scope, index, keyChain, value, insert = false, create = false, force = false) {
+function set(scope, index, keyChain, value, insert = false, create = false, force = false) {
     if (insert) create = true;
 
     let data = _readData();
@@ -265,7 +265,7 @@ function _updateDoc(keyChain, value, document, create, force) {
  * @param {Array.<string>} keyChain key chain of document, empty array means deleting the whole document given that `force` mode is enabled
  * @param {boolean} force force to delete even if the deleting target is an object
  */
-function _delete(scope, index, keyChain, force = false) {
+function delete_(scope, index, keyChain, force = false) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -329,7 +329,7 @@ function _deleteDoc(keyChain, document, force) {
  * @param {string} text text to be matched
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
-function _search(text, noFuzzy = false) {
+function search(text, noFuzzy = false) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -357,7 +357,7 @@ function _search(text, noFuzzy = false) {
         case 0:
             return _response(false, `No eligible scope found by searching "${text}".`);
         case 1:
-            return _get(scopes[0], "all", [], true);
+            return get(scopes[0], "all", [], true);
         default:
             return _response(true, `${scopes.length} eligible scopes found.`, scopes);
     }
@@ -404,7 +404,7 @@ function _searchObj(obj, text, noFuzzy) {
  * @param {string} scope1 source scope name
  * @param {string} scope2 target scope name
  */
-function _rename(scope1, scope2) {
+function rename(scope1, scope2) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -434,7 +434,7 @@ function _rename(scope1, scope2) {
  * @param {string} scope2 target scope name
  * @param {Integer} index2 target index
  */
-function _move(scope1, index1, scope2, index2) {
+function move(scope1, index1, scope2, index2) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -471,7 +471,7 @@ function _move(scope1, index1, scope2, index2) {
  * 
  * @param {string} url optional, web url or path to JSON file
  */
-function _import(url = null) {
+function import_(url = null) {
     // read data to authenticate before proceeding
     _readData();
     let data;
@@ -536,7 +536,7 @@ function _import(url = null) {
  * 
  * @param {string} filePath optional, path to JSON file
  */
-function _export(filePath = null) {
+function export_(filePath = null) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -561,7 +561,7 @@ function _export(filePath = null) {
 /**
  * Reset user passphrase.
  */
-function _resetPassphrase() {
+function resetPassphrase() {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -575,7 +575,7 @@ function _resetPassphrase() {
 /**
  * Generate hashcode of data.
  */
-function _hashcode() {
+function hashcode() {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -586,13 +586,5 @@ function _hashcode() {
     return _response(true, null, hash);
 }
 
-exports.get = _get;
-exports.set = _set;
-exports.delete = _delete;
-exports.search = _search;
-exports.rename = _rename;
-exports.move = _move;
-exports.import = _import;
-exports.export = _export;
-exports.resetPassphrase = _resetPassphrase;
-exports.hashcode = _hashcode;
+export default { get, set, delete_, search, rename, move, import_, export_, resetPassphrase, hashcode };
+export { get, set, delete_, search, rename, move, import_, export_, resetPassphrase, hashcode };

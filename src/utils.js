@@ -1,7 +1,7 @@
-const readlineSync = require('readline-sync');
+import readlineSync from 'readline-sync';
 
 
-const _helpMessage = `PManager helps manage your secret information securely. Your private data is encrypted and stored in a secure manner. To access the data, set up and remember your own passphrase.
+const helpMessage = `PManager helps manage your secret information securely. Your private data is encrypted and stored in a secure manner. To access the data, set up and remember your own passphrase.
 
 Usage:
     pm [--no-fuzzy] [--no-parse-flag] <scope> [-n <index>] [<key chain>...]
@@ -42,7 +42,7 @@ The "pm" command works under different modes based on the provided flags. If no 
 /**
  * Print object/string to stdout.
  */
-function _print(obj) {
+function print(obj) {
     if (typeof obj === 'object') {
         console.log(JSON.stringify(obj, null, 2));
     } else {
@@ -53,7 +53,7 @@ function _print(obj) {
 /**
  * Read multiple lines from stdin.
  */
-function _readLines() {
+function readLines() {
     let lines = "";
     readlineSync.promptLoop(line => {
         if (line) {
@@ -69,14 +69,14 @@ function _readLines() {
 /**
  * Sleep in seconds.
  */
-function _sleep(sec) {
+function sleep(sec) {
     Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, sec * 1000);
 }
 
 /**
  * Ask secret from command line input. Hide user input.
  */
-function _askSecret(query) {
+function askSecret(query) {
     const readlineOptions = { hideEchoBack: true, mask: '', keepWhitespace: true, caseSensitive: true };
     let secret = readlineSync.question(query + '[cancel? c] ', readlineOptions);
     if (secret === 'c') {
@@ -85,8 +85,4 @@ function _askSecret(query) {
     return secret;
 }
 
-exports.print = _print;
-exports.readLines = _readLines;
-exports.sleep = _sleep;
-exports.askSecret = _askSecret;
-exports.helpMessage = _helpMessage;
+export { helpMessage, print, readLines, sleep, askSecret };

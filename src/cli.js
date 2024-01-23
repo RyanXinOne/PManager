@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
-const minimist = require('minimist');
-const fs = require('fs');
-const config = require('./config.js');
-const storage = require('./storage.js');
-const { print, helpMessage } = require('./utils.js');
+import minimist from 'minimist';
+import fs from 'fs';
+import { print, helpMessage } from './utils.js';
+import { config, configPath, updateUserConfig } from './config.js';
+import storage from './storage.js';
 
 
 function parseScope(scopeIn, allowWildcard = false) {
@@ -66,15 +66,15 @@ function run() {
         print(helpMessage);
     } else if (args.version) {
         // version number
-        let package = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
-        print(package.version);
+        const packageInfo = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
+        print(packageInfo.version);
     } else if (args.config) {
         // list/update configs
         if (args._.length > 0) {
-            config.updateConfig(args._[0], args._[1]);
+            updateUserConfig(args._[0], args._[1]);
         } else {
-            print(`User configuration file path: "${config.configPath}"`);
-            print(config.config);
+            print(`User configuration file path: "${configPath}"`);
+            print(config);
         }
     } else if (args['reset-passphrase']) {
         // reset passphrase
@@ -110,9 +110,9 @@ function run() {
         let url = args._.length === 0 ? null : args._[0];
         let res;
         if (args.import) {
-            res = storage.import(url);
+            res = storage.import_(url);
         } else {
-            res = storage.export(url);
+            res = storage.export_(url);
         }
         if (!res.success) {
             print(res.message);
@@ -166,7 +166,7 @@ function run() {
             }
         } else if (args.delete) {
             // delete
-            let res = storage.delete(scope, index, args._.slice(1), args.force);
+            let res = storage.delete_(scope, index, args._.slice(1), args.force);
             if (!res.success) {
                 print(res.message);
             }

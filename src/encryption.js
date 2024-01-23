@@ -1,9 +1,9 @@
-const path = require('path');
-const fs = require('fs');
-const os = require('os');
-const crypto = require('crypto');
-const { config } = require('./config.js');
-const { sleep, askSecret } = require('./utils.js');
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
+import crypto from 'crypto';
+import { sleep, askSecret } from './utils.js';
+import { config } from './config.js';
 
 
 const ALGORITHM_NAME = 'aes-256-gcm';
@@ -80,7 +80,7 @@ function _prepareActiveKey(forceFlush = false) {
  * 
  * @param {string} passphrase passphrase to generate key from
  */
-function _setActiveKey(passphrase) {
+function setKey(passphrase) {
     _flushKeyCache(passphrase);
     try {
         ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
@@ -96,7 +96,7 @@ function _setActiveKey(passphrase) {
  * @param {string} dataStr text string to encrypt
  * @returns {Buffer} encrypted binary buffer
  */
-function _encrypt(dataStr) {
+function encrypt(dataStr) {
     _prepareActiveKey();
     let nonce = crypto.randomBytes(ALGORITHM_NONCE_SIZE);
     let cipher = crypto.createCipheriv(ALGORITHM_NAME, ACTIVE_KEY, nonce, { authTagLength: ALGORITHM_TAG_SIZE });
@@ -111,7 +111,7 @@ function _encrypt(dataStr) {
  * @param {Buffer} dataBuf binary buffer to decrypt
  * @returns {string} decrypted text string
  */
-function _decrypt(dataBuf, trial = 0) {
+function decrypt(dataBuf, trial = 0) {
     if (trial > PASSPHRASE_TRIAL_LIMIT) {
         throw new Error('Maximum passphrase trial reached.');
     }
@@ -128,10 +128,8 @@ function _decrypt(dataBuf, trial = 0) {
         // fail to decrypt, reset active key
         ACTIVE_KEY = undefined;
         sleep(trial * 0.5);
-        return _decrypt(dataBuf, trial + 1);
+        return decrypt(dataBuf, trial + 1);
     }
 }
 
-exports.setKey = _setActiveKey;
-exports.encrypt = _encrypt;
-exports.decrypt = _decrypt;
+export { setKey, encrypt, decrypt };
