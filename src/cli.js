@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
-import minimist from 'minimist';
+import path from 'path';
+import url from 'url';
 import fs from 'fs';
+import minimist from 'minimist';
 import { print, helpMessage } from './utils.js';
 import { config, configPath, updateUserConfig } from './config.js';
 import storage from './storage.js';
@@ -66,7 +68,7 @@ function run() {
         print(helpMessage);
     } else if (args.version) {
         // version number
-        const packageInfo = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`, 'utf8'));
+        const packageInfo = JSON.parse(fs.readFileSync(path.join(path.dirname(url.fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8'));
         print(packageInfo.version);
     } else if (args.config) {
         // list/update configs
