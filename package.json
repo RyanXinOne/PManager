@@ -11,10 +11,10 @@
   "homepage": "https://github.com/RyanXinOne/PManager",
   "author": "Ryan Xin",
   "bin": {
-    "pm": "./bin/cli.js"
+    "pm": "./src/cli.js"
   },
   "scripts": {
-    "cli-test": "npx pm --help"
+    "demo": "npx pm --help"
   },
   "dependencies": {
     "minimist": "^1.2.0",
