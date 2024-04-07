@@ -87,7 +87,7 @@ function run() {
         if (!res.success) {
             print(res.message);
         } else {
-            let code = parseInt(res.data, 16) % (10 ** 6);
+            let code = BigInt('0x' + res.data).toString().substring(0, 6);
             print(code);
         }
     } else if (args.search) {
