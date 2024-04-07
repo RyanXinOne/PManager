@@ -11,7 +11,7 @@
   "homepage": "https://github.com/RyanXinOne/PManager",
   "author": "Ryan Xin",
   "bin": {
-    "pm": "./src/cli.js"
+    "pm": "src/cli.js"
   },
   "scripts": {
     "demo": "npx pm --help"
