@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import request from 'sync-request';
 import { print, readLines, askSecret } from './utils.js';
 import { config } from './config.js';
 import { setKey, encrypt, decrypt } from './encryption.js';
@@ -481,7 +482,6 @@ function import_(url = null) {
             data = readLines();
         } else if (url.startsWith('http://') || url.startsWith('https://')) {
             // fetch json data from web
-            const request = require('sync-request');
             data = request('GET', url).getBody('utf8');
         } else {
             // read json data from file
