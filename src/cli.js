@@ -41,9 +41,9 @@ function parseIndex(indexIn, allowAll = false) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['A', 'search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'hashcode', 'help', 'version'],
+        boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'hashcode', 'help', 'version'],
         alias: { 'index': 'n', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
-        default: { 'index': 0, 'fuzzy': true, 'parse-flag': true },
+        default: { 'index': undefined, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
     };
     let argRaw = process.argv.slice(2);
@@ -51,9 +51,6 @@ function parseArgs() {
     if (!args['parse-flag']) {
         argOpts.stopEarly = true;
         args = minimist(argRaw, argOpts);
-    }
-    if (args.A) {
-        args.index = 'all';
     }
     if (args.U) {
         args.fuzzy = false;
@@ -153,10 +150,10 @@ function run() {
         let scope, index;
         if (args.edit || args.insert || args.create || args.delete) {
             scope = parseScope(args._[0]);
-            index = parseIndex(args.index);
+            index = parseIndex(args.index === undefined ? '0' : args.index);
         } else {
             scope = parseScope(args._[0], true);
-            index = parseIndex(args.index, true);
+            index = parseIndex(args.index === undefined ? 'all' : args.index, true);
         }
 
         // business operation

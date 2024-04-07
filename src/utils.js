@@ -16,9 +16,8 @@ Usage:
     pm --help|--version
 
 Options:
-    -n <index>                 The index of the document under the <scope>. Use "all" in query mode to fetch all documents, if the index is out of range in create mode, a new document will be created. The default value is 0.
+    -n <index>                 The index number of the document under the <scope>. If the index is out of range in create mode, a new document will be created. The default value is "all" in query model which fetches all documents, and "0" in other modes.
     --index=<index>            Same as "-n <index>".
-    -A                         Alias to "-n all".
     -s, --search               Search mode. Search for scope(s) containing object/sentence key-values by specified texts. All positional arguments are treated as a single string separated by a white space. Fuzzy matching is supported.
     -e, -m, --edit             Edit mode. Modify an existing sentence in a document by specifying <key chain> and <value>.
     -i, --insert               Insert mode. Insert a new document into the specified <index> instead of editing an existing one. If specified, the flag "--create" would be treated as true anyway.
