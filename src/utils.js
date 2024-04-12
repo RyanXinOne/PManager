@@ -35,7 +35,7 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-The "pm" command works under different modes based on the provided flags. If no flag is specified, "pm" is under query mode by default. It fetches the object or sentence value by the specified <key chain> in the first document under the provided <scope>. The <scope> query enables fuzzy matching by default (use "*" to fetch all scopes). One <scope> can have multiple documents that are distinguished by the <index> value. A <document> contains nested objects and sentences, which are key-value pairs with <value> being a string that can be queried by <key chain>. The <key chain> is a list of keys separated by white space.`;
+The "pm" command works under different modes based on the provided flags. If no flag is specified, "pm" is under query mode by default. It fetches the object or sentence value by the specified <key chain> in the first document under the provided <scope>. The <scope> query supports fuzzy matching by default. One <scope> can have multiple documents that are distinguished by the <index> value. A <document> contains nested objects and sentences, which are key-value pairs with <value> being a string that can be queried by <key chain>. The <key chain> is a list of keys separated by white space.`;
 
 
 /**

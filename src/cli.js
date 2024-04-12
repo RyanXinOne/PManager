@@ -9,16 +9,8 @@ import { config, configPath, updateUserConfig } from './config.js';
 import storage from './storage.js';
 
 
-function parseScope(scopeIn, allowWildcard = false) {
+function parseScope(scopeIn) {
     scopeIn = scopeIn.trim();
-    if (scopeIn === '*') {
-        if (allowWildcard) {
-            return '';
-        } else {
-            print('Scope name cannot be "*".\nUse --help for more information.');
-            process.exit(0);
-        }
-    }
     if (scopeIn === '') {
         print('Scope name cannot be empty.\nUse --help for more information.');
         process.exit(0);
@@ -141,18 +133,17 @@ function run() {
             process.exit(0);
         }
     } else {
-        // check scope
-        if (args._.length === 0) {
-            print('Scope name cannot be missing.\nUse --help for more information.');
-            process.exit(0);
-        }
         // parse scope and index
         let scope, index;
         if (args.edit || args.insert || args.create || args.delete) {
+            if (args._.length === 0) {
+                print('Scope name cannot be missing.\nUse --help for more information.');
+                process.exit(0);
+            }
             scope = parseScope(args._[0]);
             index = parseIndex(args.index === undefined ? '0' : args.index);
         } else {
-            scope = parseScope(args._[0], true);
+            scope = args._.length === 0 ? '' : parseScope(args._[0]);
             index = parseIndex(args.index === undefined ? 'all' : args.index, true);
         }
 
