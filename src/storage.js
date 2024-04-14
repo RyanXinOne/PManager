@@ -124,14 +124,15 @@ function get(scope, index, keyChain, noFuzzy = false) {
                 return _response(true, `Scope: "${scopes[0]}", ${objs.length} documents/objects found`, objs);
         }
     } else {
+        index -= 1;
         // check existence of index
         if (document[index] === undefined) {
-            return _response(false, `Scope "${scopes[0]}" does not have index ${index}.`);
+            return _response(false, `Scope "${scopes[0]}" does not have index ${index+1}.`);
         }
         let size = document.length;
         document = document[index];
         let res = _queryDoc(keyChain, document);
-        return res.success ? _response(true, `Scope: "${scopes[0]}"` + (size > 1 ? `, document ${index} (${size} in total)` : ''), res.data) : res;
+        return res.success ? _response(true, `Scope: "${scopes[0]}"` + (size > 1 ? `, document ${index+1} (${size} in total)` : ''), res.data) : res;
     }
 }
 
@@ -200,12 +201,13 @@ function set(scope, index, keyChain, value, insert = false, create = false, forc
         }
     }
     document = document[scope];
+    index -= 1;
     // check existence of index
     if (document[index] === undefined) {
         if (create) {
             index = document.push({}) - 1;
         } else {
-            return _response(false, `Scope "${scope}" does not have index ${index}.`);
+            return _response(false, `Scope "${scope}" does not have index ${index+1}.`);
         }
     } else {
         if (insert) {
@@ -274,9 +276,10 @@ function delete_(scope, index, keyChain, force = false) {
         return data;
     }
     let document = data;
+    index -= 1;
     // check existence of scope and index
     if (document[scope] === undefined || document[scope][index] === undefined) {
-        return _response(false, `Scope "${scope}" or index ${index} does not exist.`);
+        return _response(false, `Scope "${scope}" or index ${index+1} does not exist.`);
     }
     document = document[scope];
     if (keyChain.length > 0) {
@@ -286,7 +289,7 @@ function delete_(scope, index, keyChain, force = false) {
         }
     } else {
         if (!force) {
-            return _response(false, `Not allowed to delete document with index ${index} under scope "${scope}".`);
+            return _response(false, `Not allowed to delete document with index ${index+1} under scope "${scope}".`);
         }
     }
     // clean empty document or force to delete
@@ -443,9 +446,11 @@ function move(scope1, index1, scope2, index2) {
         return data;
     }
     let document = data;
+    index1 -= 1;
+    index2 -= 1;
     // check existence of source scope and index
     if (document[scope1] === undefined || document[scope1][index1] === undefined) {
-        return _response(false, `Source scope "${scope1}" or index ${index1} does not exist.`);
+        return _response(false, `Source scope "${scope1}" or index ${index1+1} does not exist.`);
     }
     document = document[scope1][index1];
     // delete source document

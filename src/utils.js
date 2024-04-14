@@ -16,7 +16,7 @@ Usage:
     pm --help|--version
 
 Options:
-    -n <index>                 The index number of the document under the <scope>. If the index is out of range in create mode, a new document will be created. The default value is "all" in query model which fetches all documents, and "0" in other modes.
+    -n <index>                 The index number of the document under the <scope>. If the index is out of range in create mode, a new document will be created. The default value is "all" in query model which fetches all documents, and "1" in other modes.
     --index=<index>            Same as "-n <index>".
     -s, --search               Search mode. Search for scope(s) containing object/sentence key-values by specified texts. All positional arguments are treated as a single string separated by a white space. Fuzzy matching is supported.
     -e, -m, --edit             Edit mode. Modify an existing sentence in a document by specifying <key chain> and <value>.
@@ -35,7 +35,9 @@ Options:
     -h, --help                 Print this help message.
     -v, --version              Print version number.
 
-The "pm" command works under different modes based on the provided flags. If no flag is specified, "pm" is under query mode by default. It fetches the object or sentence value by the specified <key chain> in the first document under the provided <scope>. The <scope> query supports fuzzy matching by default. One <scope> can have multiple documents that are distinguished by the <index> value. A <document> contains nested objects and sentences, which are key-value pairs with <value> being a string that can be queried by <key chain>. The <key chain> is a list of keys separated by white space.`;
+The "pm" command works under different modes based on the provided flags. If no flag is specified, "pm" works under query mode by default. It fetches the sentence <value> by the specified <key chain> under the provided <scope> and the indexed document.
+
+Querying <scope> supports fuzzy matching. One <scope> can have multiple documents that are distinguished by the <index> value. A <document>, which is a top-level object, contains sentences which are key-value pairs. The <value> can be a string, or object that is nested. The <key chain> consists of keys separated by the white space that queries sentence <value>.`;
 
 
 /**

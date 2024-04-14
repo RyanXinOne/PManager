@@ -141,7 +141,7 @@ function run() {
                 process.exit(0);
             }
             scope = parseScope(args._[0]);
-            index = parseIndex(args.index === undefined ? '0' : args.index);
+            index = parseIndex(args.index === undefined ? '1' : args.index);
         } else {
             scope = args._.length === 0 ? '' : parseScope(args._[0]);
             index = parseIndex(args.index === undefined ? 'all' : args.index, true);
