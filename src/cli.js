@@ -9,33 +9,24 @@ import { config, configPath, updateUserConfig } from './config.js';
 import storage from './storage.js';
 
 
-function parseScope(scopeIn) {
-    scopeIn = scopeIn.trim();
-    if (scopeIn === '') {
+
+function parseScopeIndex(name, defaultIndex = undefined) {
+    const found = name.trim().match(/^(.*?)(?:\:(\d+))?$/);
+    const scope = found[1];
+    if (scope === '') {
         print('Scope name cannot be empty.\nUse --help for more information.');
         process.exit(0);
     }
-    return scopeIn;
-}
-
-function parseIndex(indexIn, allowAll = false) {
-    if (allowAll && indexIn === 'all') {
-        return indexIn;
-    }
-    let index = parseInt(indexIn);
-    if (isNaN(index)) {
-        print('Index can only be a number.\nUse --help for more information.');
-        process.exit(0);
-    }
-    return index;
+    const index = found[2] ? parseInt(found[2]) : defaultIndex;
+    return { scope, index };
 }
 
 function parseArgs() {
     const argOpts = {
         string: '_',
         boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'hashcode', 'help', 'version'],
-        alias: { 'index': 'n', 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
-        default: { 'index': undefined, 'fuzzy': true, 'parse-flag': true },
+        alias: { 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
+        default: { 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
     };
     let argRaw = process.argv.slice(2);
@@ -111,22 +102,24 @@ function run() {
     } else if (args.move) {
         // move a document or rename a scope
         if (args._.length === 2) {
-            // rename scope
-            let scope1 = parseScope(args._[0]);
-            let scope2 = parseScope(args._[1]);
-            let res = storage.rename(scope1, scope2);
-            if (!res.success) {
-                print(res.message);
-            }
-        } else if (args._.length === 4) {
-            // move document
-            let scope1 = parseScope(args._[0]);
-            let index1 = parseIndex(args._[1]);
-            let scope2 = parseScope(args._[2]);
-            let index2 = parseIndex(args._[3]);
-            let res = storage.move(scope1, index1, scope2, index2);
-            if (!res.success) {
-                print(res.message);
+            const { scope: scope1, index: index1 } = parseScopeIndex(args._[0], undefined);
+            const { scope: scope2, index: index2 } = parseScopeIndex(args._[1], undefined);
+
+            if (index1 === undefined && index2 === undefined) {
+                // rename scope
+                let res = storage.rename(scope1, scope2);
+                if (!res.success) {
+                    print(res.message);
+                }
+            } else if (index1 !== undefined && index2 !== undefined) {
+                // move document
+                let res = storage.move(scope1, index1, scope2, index2);
+                if (!res.success) {
+                    print(res.message);
+                }
+            } else {
+                print('Mismatched index specified.\nUse --help for more information.');
+                process.exit(0);
             }
         } else {
             print('Invalid number of arguments.\nUse --help for more information.');
@@ -140,11 +133,14 @@ function run() {
                 print('Scope name cannot be missing.\nUse --help for more information.');
                 process.exit(0);
             }
-            scope = parseScope(args._[0]);
-            index = parseIndex(args.index === undefined ? '1' : args.index);
+            ({ scope, index } = parseScopeIndex(args._[0], 1));
         } else {
-            scope = args._.length === 0 ? '' : parseScope(args._[0]);
-            index = parseIndex(args.index === undefined ? 'all' : args.index, true);
+            if (args._.length === 0) {
+                scope = '';
+                index = undefined;
+            } else {
+                ({ scope, index } = parseScopeIndex(args._[0], 'all'));
+            }
         }
 
         // business operation
