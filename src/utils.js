@@ -42,11 +42,21 @@ Querying <scope> supports fuzzy matching. One <scope> can have multiple document
 /**
  * Print object/string to stdout.
  */
-function print(obj) {
-    if (typeof obj === 'object') {
-        console.log(JSON.stringify(obj, null, 2));
+function print(obj, indent = 0) {
+    if (Array.isArray(obj)) {
+        // print array with index label
+        for (let i = 0; i < obj.length; i++) {
+            const label = `<${i + 1}> `;
+            process.stdout.write(label);
+            print(obj[i], label.length);
+        }
+    } else if (typeof obj === 'object' && obj !== null) {
+        // print object with indent
+        const objStr = JSON.stringify(obj, null, 2).split('\n').map((line, i) => i === 0 ? line : ' '.repeat(indent) + line).join('\n');
+        process.stdout.write(`${objStr}\n`);
     } else {
-        console.log(obj);
+        // print string
+        process.stdout.write(`${obj}\n`);
     }
 }
 
