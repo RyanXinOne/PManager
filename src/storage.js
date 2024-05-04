@@ -86,9 +86,10 @@ function _writeData(data) {
  * @param {string} scope scope name
  * @param {Integer | string} index index of document to be fetched under the scope, string value "all" returns all documents under the scope
  * @param {Array.<string>} keyChain key chain of document
+ * @param {Integer} candidateN optional, the index of candidate scope to be returned when multiple scopes are found
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
-function get(scope, index, keyChain, noFuzzy = false) {
+function get(scope, index, keyChain, candidateN = undefined, noFuzzy = false) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -98,15 +99,26 @@ function get(scope, index, keyChain, noFuzzy = false) {
     let document = data;
     // query scope
     let scopes = _queryDataStore(scope, document, noFuzzy);
+    let candidateScope;
     switch (scopes.length) {
         case 0:
             return _response(false, `No scope found.`);
         case 1:
-            document = document[scopes[0]];
+            candidateScope = scopes[0];
             break;
         default:
-            return _response(true, `${scopes.length} scopes found. Please specify which one you want, or add flag "-U" or "--no-fuzzy" for exact matching.`, scopes);
+            if (Number.isInteger(candidateN)) {
+                // candidate scope selection
+                if (candidateN < 1 || candidateN > scopes.length) {
+                    return _response(true, `${scopes.length} scopes found. Invalid candidate number ${candidateN}.`, scopes);
+                }
+                candidateScope = scopes[candidateN - 1];
+                break;
+            } else {
+                return _response(true, `${scopes.length} scopes found. Select candidate scope with flag "-n", or add "-U" for exact matching.`, scopes);
+            }
     }
+    document = document[candidateScope];
     if (index === 'all') {
         let objs = [];
         for (const doc of document) {
@@ -117,22 +129,22 @@ function get(scope, index, keyChain, noFuzzy = false) {
         }
         switch (objs.length) {
             case 0:
-                return _response(false, `No compliant objects found under scope "${scopes[0]}".`);
+                return _response(false, `No compliant objects found under scope "${candidateScope}".`);
             case 1:
-                return _response(true, `Scope: "${scopes[0]}"`, objs[0]);
+                return _response(true, `Scope: "${candidateScope}"`, objs[0]);
             default:
-                return _response(true, `Scope: "${scopes[0]}", ${objs.length} documents/objects found`, objs);
+                return _response(true, `Scope: "${candidateScope}", ${objs.length} documents/objects found`, objs);
         }
     } else {
         index -= 1;
         // check existence of index
         if (document[index] === undefined) {
-            return _response(false, `Scope "${scopes[0]}" does not have index ${index+1}.`);
+            return _response(false, `Scope "${candidateScope}" does not have index ${index + 1}.`);
         }
         let size = document.length;
         document = document[index];
         let res = _queryDoc(keyChain, document);
-        return res.success ? _response(true, `Scope: "${scopes[0]}"` + (size > 1 ? `, document ${index+1} (${size} in total)` : ''), res.data) : res;
+        return res.success ? _response(true, `Scope: "${candidateScope}"` + (size > 1 ? `, document ${index + 1} (${size} in total)` : ''), res.data) : res;
     }
 }
 
@@ -207,7 +219,7 @@ function set(scope, index, keyChain, value, insert = false, create = false, forc
         if (create) {
             index = document.push({}) - 1;
         } else {
-            return _response(false, `Scope "${scope}" does not have index ${index+1}.`);
+            return _response(false, `Scope "${scope}" does not have index ${index + 1}.`);
         }
     } else {
         if (insert) {
@@ -279,7 +291,7 @@ function delete_(scope, index, keyChain, force = false) {
     index -= 1;
     // check existence of scope and index
     if (document[scope] === undefined || document[scope][index] === undefined) {
-        return _response(false, `Scope "${scope}" or index ${index+1} does not exist.`);
+        return _response(false, `Scope "${scope}" or index ${index + 1} does not exist.`);
     }
     document = document[scope];
     if (keyChain.length > 0) {
@@ -289,7 +301,7 @@ function delete_(scope, index, keyChain, force = false) {
         }
     } else {
         if (!force) {
-            return _response(false, `Not allowed to delete document with index ${index+1} under scope "${scope}".`);
+            return _response(false, `Not allowed to delete document with index ${index + 1} under scope "${scope}".`);
         }
     }
     // clean empty document or force to delete
@@ -331,9 +343,10 @@ function _deleteDoc(keyChain, document, force) {
  * Search for scopes that contain object/sentence key-values by text specified.
  * 
  * @param {string} text text to be matched
+ * @param {Integer} candidateN optional, the index of candidate scope to be returned when multiple scopes are found
  * @param {boolean} noFuzzy whether to disable fuzzy matching
  */
-function search(text, noFuzzy = false) {
+function search(text, candidateN = undefined, noFuzzy = false) {
     let data = _readData();
     if (data.success) {
         data = data.data;
@@ -359,11 +372,19 @@ function search(text, noFuzzy = false) {
     // return scopes search result
     switch (scopes.length) {
         case 0:
-            return _response(false, `No eligible scope found by searching "${text}".`);
+            return _response(false, `No matching scope found by searching "${text}".`);
         case 1:
             return get(scopes[0], "all", [], true);
         default:
-            return _response(true, `${scopes.length} eligible scopes found.`, scopes);
+            if (Number.isInteger(candidateN)) {
+                // candidate scope selection
+                if (candidateN < 1 || candidateN > scopes.length) {
+                    return _response(true, `${scopes.length} matching scopes found. Invalid candidate number ${candidateN}.`, scopes);
+                }
+                return get(scopes[candidateN - 1], "all", [], true);
+            } else {
+                return _response(true, `${scopes.length} matching scopes found. Select candidate scope with flag "-n".`, scopes);
+            }
     }
 }
 
@@ -450,7 +471,7 @@ function move(scope1, index1, scope2, index2) {
     index2 -= 1;
     // check existence of source scope and index
     if (document[scope1] === undefined || document[scope1][index1] === undefined) {
-        return _response(false, `Source scope "${scope1}" or index ${index1+1} does not exist.`);
+        return _response(false, `Source scope "${scope1}" or index ${index1 + 1} does not exist.`);
     }
     document = document[scope1][index1];
     // delete source document

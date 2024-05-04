@@ -25,6 +25,7 @@ Options:
     -c, --create               Create mode. Create a new object and sentence if any key in <key chain> does not exist. A new document would be created if the specified <index> is out of range.
     -d, --delete               Delete mode. Delete a sentence by the specified <key chain>. An empty document and scope would be cleaned automatically.
     -f, --force                Under edit mode, force to overwrite even if any key in <key chain> points to an existing object. Under delete mode, force to delete even if the deleting target is a document or non-empty object.
+    -n <number>                The candidate number to select on query or search mode when multiple entries are found.
     -U, --no-fuzzy             Disable fuzzy matching under query or search mode.
     --no-parse-flag            If specified, any flag occurring after the first non-flag input would not be parsed.
     --move                     Move a document from one index position to another if <source index> and <target index> are both given. <target scope> would be created if not exist. The source document would be deleted first then inserted into <target index> under <target scope>. An empty scope would be cleaned automatically. If <source index> and <target index> are both not given, <source scope> is renamed into <target scope>.

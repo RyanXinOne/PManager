@@ -26,7 +26,7 @@ function parseArgs() {
         string: '_',
         boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'hashcode', 'help', 'version'],
         alias: { 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
-        default: { 'fuzzy': true, 'parse-flag': true },
+        default: { 'n': undefined, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
     };
     let argRaw = process.argv.slice(2);
@@ -38,6 +38,8 @@ function parseArgs() {
     if (args.U) {
         args.fuzzy = false;
     }
+    // parse 'n'
+    args.n = Number.isInteger(args.n) ? parseInt(args.n) : undefined;
     return args;
 }
 
@@ -80,7 +82,7 @@ function run() {
             process.exit(0);
         }
         let texts = args._.join(' ');
-        let res = storage.search(texts, !args.fuzzy);
+        let res = storage.search(texts, args.n, !args.fuzzy);
         if (res.success) {
             print(res.message);
             print(res.data);
@@ -158,7 +160,7 @@ function run() {
             }
         } else {
             // query
-            let res = storage.get(scope, index, args._.slice(1), !args.fuzzy);
+            let res = storage.get(scope, index, args._.slice(1), args.n, !args.fuzzy);
             if (res.success) {
                 print(res.message);
                 print(res.data);
