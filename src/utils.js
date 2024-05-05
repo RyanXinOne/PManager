@@ -12,6 +12,7 @@ Usage:
     pm --export [<file path>]
     pm --hashcode
     pm --reset-passphrase
+    pm --lock
     pm --config [<config key>] [<config value>]
     pm --help|--version
 
@@ -31,6 +32,7 @@ Options:
     --export                   Export data to a file. If <file path> is omitted, write to standard output.
     --hashcode                 Print hash code of data.
     --reset-passphrase         Reset encryption passphrase.
+    --lock                     Lock data immediately. The passphrase will be required to unlock.
     --config                   List current configurations, set a user config entry by <config key> and <config value>, or reset a config entry by leaving <config value> empty.
     -h, --help                 Print this help message.
     -v, --version              Print version number.

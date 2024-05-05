@@ -18,6 +18,18 @@ fs.mkdirSync(path.dirname(KEY_CACHE_PATH), { recursive: true });
 let ACTIVE_KEY = undefined;
 
 /**
+ * Update ACTIVE_KEY from key cache file.
+ */
+function _updateActiveKey() {
+    try {
+        ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
+    } catch (err) {
+        console.error("Failed to read key cache file: %s", err.message);
+        process.exit(0);
+    }
+}
+
+/**
  * Flush local key cache by input passphrase. If not provided, ask user passphrase
  * from command line input. The key is generated from passphrase and saved into
  * local temporary cache file.
@@ -66,28 +78,7 @@ function _prepareActiveKey(forceFlush = false) {
         }
     }
     // now key cache is ready and trusted, read ACTIVE_KEY from cache
-    try {
-        ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
-    } catch (err) {
-        console.error("Failed to read key cache file: %s", err.message);
-        process.exit(0);
-    }
-}
-
-/**
- * Manually set ACTIVE_KEY. Use given passphrase to flush local key cache and read
- * key from it.
- * 
- * @param {string} passphrase passphrase to generate key from
- */
-function setKey(passphrase) {
-    _flushKeyCache(passphrase);
-    try {
-        ACTIVE_KEY = fs.readFileSync(KEY_CACHE_PATH);
-    } catch (err) {
-        console.error("Failed to read key cache file: %s", err.message);
-        process.exit(0);
-    }
+    _updateActiveKey();
 }
 
 /**
@@ -132,4 +123,23 @@ function decrypt(dataBuf, trial = 0) {
     }
 }
 
-export { setKey, encrypt, decrypt };
+/**
+ * Manually set ACTIVE_KEY. Use given passphrase to flush local key cache and read
+ * key from it.
+ * 
+ * @param {string} passphrase passphrase to generate key from
+ */
+function setKey(passphrase) {
+    _flushKeyCache(passphrase);
+    _updateActiveKey();
+}
+
+/**
+ * Reset key cache and ACTIVE_KEY.
+ */
+function lockKey() {
+    _flushKeyCache('');
+    _updateActiveKey();
+}
+
+export { encrypt, decrypt, setKey, lockKey };

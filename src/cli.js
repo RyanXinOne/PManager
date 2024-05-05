@@ -7,7 +7,7 @@ import minimist from 'minimist';
 import { print, helpMessage } from './utils.js';
 import { config, configPath, updateUserConfig } from './config.js';
 import storage from './storage.js';
-
+import { lockKey } from './encryption.js';
 
 
 function parseScopeIndex(name, defaultIndex = undefined) {
@@ -24,7 +24,7 @@ function parseScopeIndex(name, defaultIndex = undefined) {
 function parseArgs() {
     const argOpts = {
         string: '_',
-        boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'reset-passphrase', 'config', 'hashcode', 'help', 'version'],
+        boolean: ['search', 'edit', 'insert', 'create', 'delete', 'force', 'fuzzy', 'U', 'parse-flag', 'move', 'import', 'export', 'hashcode', 'reset-passphrase', 'lock', 'config', 'help', 'version'],
         alias: { 'search': 's', 'edit': ['e', 'm'], 'insert': 'i', 'create': 'c', 'delete': 'd', 'force': 'f', 'help': 'h', 'version': 'v' },
         default: { 'n': undefined, 'fuzzy': true, 'parse-flag': true },
         stopEarly: false
@@ -43,7 +43,7 @@ function parseArgs() {
     return args;
 }
 
-function run() {
+function main() {
     const args = parseArgs();
     if (args.help) {
         // help message
@@ -60,6 +60,9 @@ function run() {
             print(`User configuration file path: "${configPath}"`);
             print(config);
         }
+    } else if (args.lock) {
+        // lock immediately
+        lockKey();
     } else if (args['reset-passphrase']) {
         // reset passphrase
         let res = storage.resetPassphrase();
@@ -171,4 +174,4 @@ function run() {
     }
 }
 
-run();
+main();
