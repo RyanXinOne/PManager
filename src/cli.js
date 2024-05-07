@@ -142,7 +142,7 @@ function main() {
         } else {
             if (args._.length === 0) {
                 scope = '';
-                index = undefined;
+                index = 'all';
             } else {
                 ({ scope, index } = parseScopeIndex(args._[0], 'all'));
             }
