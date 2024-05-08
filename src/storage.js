@@ -110,12 +110,12 @@ function get(scope, index, keyChain, candidateN = undefined, noFuzzy = false) {
             if (Number.isInteger(candidateN)) {
                 // candidate scope selection
                 if (candidateN < 1 || candidateN > scopes.length) {
-                    return _response(true, `${scopes.length} scopes found. Invalid candidate number ${candidateN}.`, scopes);
+                    return _response(true, `${scopes.length} scopes found. Invalid candidate number ${candidateN}.`, { 'type': 'scope', 'data': scopes });
                 }
                 candidateScope = scopes[candidateN - 1];
                 break;
             } else {
-                return _response(true, `${scopes.length} scopes found. Select candidate scope with flag "-n", or add "-U" for exact matching.`, scopes);
+                return _response(true, `${scopes.length} scopes found. Select candidate scope with flag "-n", or add "-U" for exact matching.`, { 'type': 'scope', 'data': scopes });
             }
     }
     document = document[candidateScope];
@@ -131,9 +131,9 @@ function get(scope, index, keyChain, candidateN = undefined, noFuzzy = false) {
             case 0:
                 return _response(false, `No compliant objects found under scope "${candidateScope}".`);
             case 1:
-                return _response(true, `Scope: "${candidateScope}"`, objs[0]);
+                return _response(true, `Scope: "${candidateScope}"`, { 'type': 'object', 'data': objs[0] });
             default:
-                return _response(true, `Scope: "${candidateScope}", ${objs.length} documents/objects found`, objs);
+                return _response(true, `Scope: "${candidateScope}", ${objs.length} documents/objects found`, { 'type': 'object', 'data': objs });
         }
     } else {
         index -= 1;
@@ -144,7 +144,11 @@ function get(scope, index, keyChain, candidateN = undefined, noFuzzy = false) {
         let size = document.length;
         document = document[index];
         let res = _queryDoc(keyChain, document);
-        return res.success ? _response(true, `Scope: "${candidateScope}"` + (size > 1 ? `, document ${index + 1} (${size} in total)` : ''), res.data) : res;
+        if (res.success) {
+            return _response(true, `Scope: "${candidateScope}"` + (size > 1 ? `, document ${index + 1} (${size} in total)` : ''), { 'type': 'object', 'data': res.data });
+        } else {
+            return res;
+        }
     }
 }
 
@@ -374,16 +378,16 @@ function search(text, candidateN = undefined, noFuzzy = false) {
         case 0:
             return _response(false, `No matching scope found by searching "${text}".`);
         case 1:
-            return get(scopes[0], "all", [], true);
+            return get(scopes[0], "all", [], undefined, true);
         default:
             if (Number.isInteger(candidateN)) {
                 // candidate scope selection
                 if (candidateN < 1 || candidateN > scopes.length) {
-                    return _response(true, `${scopes.length} matching scopes found. Invalid candidate number ${candidateN}.`, scopes);
+                    return _response(true, `${scopes.length} matching scopes found. Invalid candidate number ${candidateN}.`, { 'type': 'scope', 'data': scopes });
                 }
-                return get(scopes[candidateN - 1], "all", [], true);
+                return get(scopes[candidateN - 1], "all", [], undefined, true);
             } else {
-                return _response(true, `${scopes.length} matching scopes found. Select candidate scope with flag "-n".`, scopes);
+                return _response(true, `${scopes.length} matching scopes found. Select candidate scope with flag "-n".`, { 'type': 'scope', 'data': scopes });
             }
     }
 }

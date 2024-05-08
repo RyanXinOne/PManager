@@ -88,7 +88,12 @@ function main() {
         let res = storage.search(texts, args.n, !args.fuzzy);
         if (res.success) {
             print(res.message);
-            print(res.data);
+            const resData = res.data;
+            if (resData.type === 'object') {
+                print(resData.data, '[]');
+            } else {
+                print(resData.data);
+            }
         } else {
             print(res.message);
         }
@@ -166,7 +171,12 @@ function main() {
             let res = storage.get(scope, index, args._.slice(1), args.n, !args.fuzzy);
             if (res.success) {
                 print(res.message);
-                print(res.data);
+                const resData = res.data;
+                if (resData.type === 'object') {
+                    print(resData.data, '[]');
+                } else {
+                    print(resData.data);
+                }
             } else {
                 print(res.message);
             }

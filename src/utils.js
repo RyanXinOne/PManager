@@ -45,13 +45,13 @@ Querying <scope> supports fuzzy matching. One <scope> can have multiple document
 /**
  * Print object/string to stdout.
  */
-function print(obj, indent = 0) {
+function print(obj, arrayStyle = '<>', indent = 0) {
     if (Array.isArray(obj)) {
         // print array with index label
         for (let i = 0; i < obj.length; i++) {
-            const label = `<${i + 1}> `;
+            const label = `${arrayStyle[0]}${i + 1}${arrayStyle[1]} `;
             process.stdout.write(label);
-            print(obj[i], label.length);
+            print(obj[i], arrayStyle, label.length);
         }
     } else if (typeof obj === 'object' && obj !== null) {
         // print object with indent
