@@ -19,8 +19,8 @@
   "type": "module",
   "dependencies": {
     "minimist": "^1.2.0",
-    "readline-sync": "^1.4.10",
-    "sync-request": "^6.1.0"
+    "node-fetch": "^3.3.2",
+    "readline-sync": "^1.4.10"
   },
   "devDependencies": {
     "pmanager": "file:./"

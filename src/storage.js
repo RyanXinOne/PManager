@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import request from 'sync-request';
+import fetch from 'node-fetch';
 import { print, readLines, askSecret } from './utils.js';
 import { config } from './config.js';
 import { setKey, encrypt, decrypt } from './encryption.js';
@@ -502,7 +502,7 @@ function move(scope1, index1, scope2, index2) {
  * 
  * @param {string} url optional, web url or path to JSON file
  */
-function import_(url = null) {
+async function import_(url = null) {
     // read data to authenticate before proceeding
     _readData();
     let data;
@@ -510,14 +510,16 @@ function import_(url = null) {
         if (url === null) {
             // read json data from stdin
             data = readLines();
+            data = JSON.parse(data);
         } else if (url.startsWith('http://') || url.startsWith('https://')) {
             // fetch json data from web
-            data = request('GET', url).getBody('utf8');
+            const response = await fetch(url);
+            data = await response.json();
         } else {
             // read json data from file
             data = fs.readFileSync(url, 'utf8');
+            data = JSON.parse(data);
         }
-        data = JSON.parse(data);
     } catch (err) {
         return _response(false, err.message);
     }

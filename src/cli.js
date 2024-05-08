@@ -43,7 +43,7 @@ function parseArgs() {
     return args;
 }
 
-function main() {
+async function main() {
     const args = parseArgs();
     if (args.help) {
         // help message
@@ -102,7 +102,7 @@ function main() {
         let url = args._.length === 0 ? null : args._[0];
         let res;
         if (args.import) {
-            res = storage.import_(url);
+            res = await storage.import_(url);
         } else {
             res = storage.export_(url);
         }
